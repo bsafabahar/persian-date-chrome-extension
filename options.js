@@ -128,7 +128,6 @@ class OptionsManager {
     this.elements.totalConverted.textContent = this.formatNumber(this.settings.convertedCount);
     this.elements.totalDomains.textContent = this.settings.allowedDomains.length;
   }
-
   updateDomainList() {
     const container = this.elements.domainList;
     container.innerHTML = '';
@@ -142,13 +141,20 @@ class OptionsManager {
       const domainItem = document.createElement('div');
       domainItem.className = 'domain-item';
 
-      domainItem.innerHTML = `
-        <span class="domain-name">${domain}</span>
-        <button class="domain-remove" onclick="optionsManager.removeDomain(${index})" title="حذف دامنه">
-          ❌
-        </button>
-      `;
+      const domainName = document.createElement('span');
+      domainName.className = 'domain-name';
+      domainName.textContent = domain;
 
+      const removeButton = document.createElement('button');
+      removeButton.className = 'domain-remove';
+      removeButton.title = 'حذف دامنه';
+      removeButton.textContent = '❌';
+      removeButton.addEventListener('click', () => {
+        this.removeDomain(index);
+      });
+
+      domainItem.appendChild(domainName);
+      domainItem.appendChild(removeButton);
       container.appendChild(domainItem);
     });
   }
@@ -346,10 +352,7 @@ class OptionsManager {
   }
 }
 
-// متغیر سراسری برای دسترسی در onclick handlers
-let optionsManager;
-
 // شروع options
 document.addEventListener('DOMContentLoaded', () => {
-  optionsManager = new OptionsManager();
+  new OptionsManager();
 });
