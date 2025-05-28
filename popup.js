@@ -72,7 +72,7 @@ class PopupManager {
 
       this.updateUI();
     } catch (error) {
-      console.error('خطا در بارگذاری تنظیمات:', error);
+      
       this.showError('خطا در بارگذاری تنظیمات');
     }
   }
@@ -101,7 +101,7 @@ class PopupManager {
         this.elements.currentDomain.textContent = domain || 'نامشخص';
       }
     } catch (error) {
-      console.error('خطا در دریافت دامنه فعلی:', error);
+      
       this.elements.currentDomain.textContent = 'خطا';
     }
   }
@@ -137,7 +137,7 @@ class PopupManager {
         this.updateDomainStatus('دامنه غیرمجاز', '🔴');
       }
     } catch (error) {
-      console.error('خطا در بررسی وضعیت دامنه:', error);
+      
       this.updateDomainStatus('خطا در بررسی', '⚪');
     }
   }
@@ -164,7 +164,7 @@ class PopupManager {
       // نمایش پیام موفقیت
       this.showSuccess(enabled ? 'افزونه فعال شد' : 'افزونه غیرفعال شد');
     } catch (error) {
-      console.error('خطا در تغییر وضعیت افزونه:', error);
+      
       this.showError('خطا در تغییر وضعیت');
       
       // برگرداندن وضعیت قبلی
@@ -185,7 +185,7 @@ class PopupManager {
         }, 1000);
       }
     } catch (error) {
-      console.error('خطا در تازه‌سازی صفحه:', error);
+      
       this.showError('خطا در تازه‌سازی صفحه');
     }
   }

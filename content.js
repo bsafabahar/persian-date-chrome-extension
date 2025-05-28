@@ -6,9 +6,6 @@
  * @version 1.0.0
  */
 
-console.log('🚀 PERSIAN DATE EXTENSION: Content script loaded!');
-console.log('📍 Page URL:', window.location.href);
-
 // Mark that our extension is active
 window.persianDateExtension = true;
 
@@ -17,11 +14,7 @@ class PersianDateConverter {
         this.convertedCount = 0;
         this.processedNodes = new WeakSet();
         this.init();
-    }
-
-    init() {
-        console.log('🔧 Initializing Persian Date Converter...');
-        
+    }    init() {
         // Wait for DOM and libraries to be ready
         this.waitForReady(() => {
             this.checkLibrary();
@@ -39,29 +32,18 @@ class PersianDateConverter {
         }
     }    checkLibrary() {
         if (typeof PersianDate === 'undefined') {
-            console.error('❌ PersianDate library not found!');
-            console.log('🔍 Available globals:', Object.keys(window).filter(k => k.toLowerCase().includes('persian')));
             return false;
         }
-        
-        console.log('✅ PersianDate library is available');
         
         // Test the library
         try {
             const [jYear, jMonth, jDay] = PersianDate.toJalali(new Date(2024, 2, 20)); // March 20, 2024
-            console.log('✅ Library test successful:', '2024-03-20 →', `${jYear}/${jMonth}/${jDay}`);
             return true;
         } catch (error) {
-            console.error('❌ Library test failed:', error);
             return false;
         }
-    }
-
-    startConversion() {
-        console.log('🔄 Starting date conversion process...');
-        
+    }    startConversion() {
         if (!document.body) {
-            console.warn('⚠️ No document body found');
             return;
         }
 
@@ -69,11 +51,7 @@ class PersianDateConverter {
         
         // Set up observer for dynamic content
         this.setupMutationObserver();
-    }
-
-    convertDatesInDocument() {
-        console.log('📄 Scanning document for dates...');
-        
+    }    convertDatesInDocument() {
         // Get all text nodes in the document
         const walker = document.createTreeWalker(
             document.body,
@@ -104,14 +82,14 @@ class PersianDateConverter {
             }
         }
 
-        console.log(`📝 Found ${textNodes.length} text nodes with potential dates`);
+        
 
         // Process each text node
         textNodes.forEach((textNode, index) => {
             this.processTextNode(textNode, index);
         });
 
-        console.log(`✅ Conversion complete! Converted ${this.convertedCount} dates total.`);
+        
     }    containsDate(text) {
         if (!text || text.trim().length < 6) return false;
         
@@ -145,10 +123,10 @@ class PersianDateConverter {
             if (originalText !== convertedText) {
                 textNode.textContent = convertedText;
                 this.processedNodes.add(textNode);
-                console.log(`✅ Node ${index} converted:`, originalText.trim(), '→', convertedText.trim());
+                
             }
         } catch (error) {
-            console.error(`❌ Error processing node ${index}:`, error);
+            
         }
     }    convertDatesInText(text) {
         let convertedText = text;
@@ -270,7 +248,7 @@ class PersianDateConverter {
                 const [jYear, jMonth, jDay] = PersianDate.toJalali(targetDate);
                 return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
             } catch (error) {
-                console.warn('Error converting relative date:', match, error);
+                
                 return match;
             }
         });
@@ -298,7 +276,7 @@ class PersianDateConverter {
                 const [jYear, jMonth, jDay] = PersianDate.toJalali(targetDate);
                 return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
             } catch (error) {
-                console.warn('Error converting relative date:', match, error);
+                
                 return match;
             }
         });
@@ -338,7 +316,7 @@ class PersianDateConverter {
         return convertedText;
     }    convertToPersian(year, month, day, originalMatch) {
         try {
-            console.log(`📅 Converting: ${originalMatch} (${year}/${month}/${day})`);
+            
             
             const gregorianDate = new Date(year, month - 1, day);
             
@@ -346,7 +324,7 @@ class PersianDateConverter {
             if (gregorianDate.getFullYear() !== year || 
                 gregorianDate.getMonth() !== month - 1 || 
                 gregorianDate.getDate() !== day) {
-                console.warn(`⚠️ Invalid date: ${originalMatch}`);
+                
                 return originalMatch;
             }
             
@@ -355,18 +333,18 @@ class PersianDateConverter {
             
             // Validate Persian date result
             if (!this.isValidPersianDate(jYear, jMonth, jDay)) {
-                console.warn(`⚠️ Invalid Persian date result: ${jYear}/${jMonth}/${jDay} for ${originalMatch}`);
+                
                 return originalMatch;
             }
             
             const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
             
             this.convertedCount++;
-            console.log(`✅ ${originalMatch} → ${result}`);
+            
             
             return result;
         } catch (error) {
-            console.error(`❌ Conversion error for ${originalMatch}:`, error);
+            
             return originalMatch;
         }
     }
@@ -422,7 +400,7 @@ class PersianDateConverter {
             });
             
             if (hasNewText) {
-                console.log('🔄 New content detected, re-scanning...');
+                
                 setTimeout(() => this.convertDatesInDocument(), 100);
             }
         });
@@ -432,7 +410,7 @@ class PersianDateConverter {
             subtree: true
         });
         
-        console.log('👀 Mutation observer set up for dynamic content');
+        
     }
 }
 

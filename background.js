@@ -22,7 +22,6 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     // تنظیم مقادیر پیش‌فرض
     await chrome.storage.sync.set(DEFAULT_SETTINGS);
-    console.log('افزونه تبدیل تاریخ نصب شد');
   }
 });
 
@@ -75,9 +74,7 @@ async function checkDomainPermission(url) {
       }
       return currentDomain === domain || currentDomain.includes(domain);
     });
-    
-  } catch (error) {
-    console.error('خطا در بررسی مجوز دامنه:', error);
+      } catch (error) {
     return false;
   }
 }
@@ -87,18 +84,15 @@ async function incrementConvertedCount() {
   try {
     const result = await chrome.storage.sync.get(['convertedCount']);
     const newCount = (result.convertedCount || 0) + 1;
-    await chrome.storage.sync.set({ convertedCount: newCount });
-  } catch (error) {
-    console.error('خطا در به‌روزرسانی شمارنده:', error);
+    await chrome.storage.sync.set({ convertedCount: newCount });  } catch (error) {
+    // خطا در به‌روزرسانی شمارنده
   }
 }
 
 // دریافت تنظیمات
 async function getSettings() {
   try {
-    return await chrome.storage.sync.get(DEFAULT_SETTINGS);
-  } catch (error) {
-    console.error('خطا در دریافت تنظیمات:', error);
+    return await chrome.storage.sync.get(DEFAULT_SETTINGS);  } catch (error) {
     return DEFAULT_SETTINGS;
   }
 }
@@ -115,9 +109,8 @@ async function updateIcon() {
         '48': iconPath.replace('16', '48'),
         '128': iconPath.replace('16', '128')
       }
-    });
-  } catch (error) {
-    console.error('خطا در به‌روزرسانی آیکون:', error);
+    });  } catch (error) {
+    // خطا در به‌روزرسانی آیکون
   }
 }
 

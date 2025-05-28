@@ -102,7 +102,7 @@ class OptionsManager {
 
       this.updateUI();
     } catch (error) {
-      console.error('خطا در بارگذاری تنظیمات:', error);
+      
       this.showNotification('خطا در بارگذاری تنظیمات', 'error');
     }
   }
@@ -170,7 +170,7 @@ class OptionsManager {
         'success'
       );
     } catch (error) {
-      console.error('خطا در تغییر وضعیت افزونه:', error);
+      
       this.showNotification('خطا در تغییر وضعیت', 'error');
     }
   }
@@ -213,7 +213,7 @@ class OptionsManager {
       this.updateUI();
       this.showNotification('دامنه با موفقیت اضافه شد', 'success');
     } catch (error) {
-      console.error('خطا در افزودن دامنه:', error);
+      
       this.showNotification('خطا در افزودن دامنه', 'error');
     }
   }
@@ -238,7 +238,7 @@ class OptionsManager {
       this.updateUI();
       this.showNotification('دامنه با موفقیت حذف شد', 'success');
     } catch (error) {
-      console.error('خطا در حذف دامنه:', error);
+      
       this.showNotification('خطا در حذف دامنه', 'error');
     }
   }
@@ -251,7 +251,7 @@ class OptionsManager {
       this.updateUI();
       this.showNotification('اجازه دسترسی به همه دامنه‌ها داده شد', 'success');
     } catch (error) {
-      console.error('خطا در تنظیم همه دامنه‌ها:', error);
+      
       this.showNotification('خطا در تنظیم دامنه‌ها', 'error');
     }
   }
@@ -268,7 +268,7 @@ class OptionsManager {
       this.updateUI();
       this.showNotification('آمار با موفقیت پاک شد', 'success');
     } catch (error) {
-      console.error('خطا در پاک کردن آمار:', error);
+      
       this.showNotification('خطا در پاک کردن آمار', 'error');
     }
   }
@@ -291,7 +291,7 @@ class OptionsManager {
       this.updateUI();
       this.showNotification('همه تنظیمات بازنشانی شد', 'success');
     } catch (error) {
-      console.error('خطا در بازنشانی تنظیمات:', error);
+      
       this.showNotification('خطا در بازنشانی تنظیمات', 'error');
     }
   }
