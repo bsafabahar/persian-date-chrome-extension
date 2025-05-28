@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+Persian Date Chrome Extension - Popup Interface
+تبدیل تاریخ میلادی به شمسی
+
+@author Babak Safabahar
+@version 1.0.0
+-->
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تبدیل تاریخ میلادی به شمسی</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <img src="icons/icon48.png" alt="آیکون" class="logo">
+            <h1 class="title">تبدیل تاریخ میلادی به شمسی</h1>
+        </header>
+
+        <main class="main-content">
+            <!-- وضعیت افزونه -->
+            <div class="status-section">
+                <div class="status-item">
+                    <label class="switch">
+                        <input type="checkbox" id="enableToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status-label">وضعیت افزونه</span>
+                </div>
+                <div class="status-text" id="statusText">غیرفعال</div>
+            </div>
+
+            <!-- آمار -->
+            <div class="stats-section">
+                <div class="stat-item">
+                    <span class="stat-number" id="convertedCount">0</span>
+                    <span class="stat-label">تاریخ تبدیل شده</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="currentDomain">--</span>
+                    <span class="stat-label">دامنه فعلی</span>
+                </div>
+            </div>
+
+            <!-- دکمه‌های عملکرد -->
+            <div class="actions-section">
+                <button class="btn btn-primary" id="refreshBtn">
+                    <span class="btn-icon">🔄</span>
+                    تازه‌سازی صفحه
+                </button>
+                
+                <button class="btn btn-secondary" id="optionsBtn">
+                    <span class="btn-icon">⚙️</span>
+                    تنظیمات پیشرفته
+                </button>
+            </div>
+
+            <!-- دامنه فعلی -->
+            <div class="domain-section">
+                <div class="domain-status" id="domainStatus">
+                    <span class="domain-indicator" id="domainIndicator">⚪</span>
+                    <span class="domain-text" id="domainText">در حال بررسی...</span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="version">نسخه 1.0.0</div>
+            <div class="developer">توسعه یافته با ❤️</div>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

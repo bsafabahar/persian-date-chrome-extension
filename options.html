@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<!--
+Persian Date Chrome Extension - Options Page
+تبدیل تاریخ میلادی به شمسی
+
+@author Babak Safabahar
+@version 1.0.0
+-->
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنظیمات افزونه تبدیل تاریخ</title>
+    <style>
+        /* فونت‌های فارسی */
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+
+        /* متغیرهای CSS */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --border-radius: 12px;
+            --transition: all 0.2s ease-in-out;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', 'Tahoma', 'Arial', sans-serif;
+            direction: rtl;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .card {
+            background: var(--surface-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: var(--transition);
+            background-color: var(--surface-color);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--background-color);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .domain-list {
+            background-color: var(--background-color);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .domain-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: var(--surface-color);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .domain-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .domain-name {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .domain-remove {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .domain-remove:hover {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .notification {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .notification-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .notification-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* حالت تاریک */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: #0f172a;
+                --surface-color: #1e293b;
+                --text-primary: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --border-color: #334155;
+            }
+        }
+
+        /* ریسپانسیو */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>⚙️ تنظیمات افزونه</h1>
+            <p>مدیریت دامنه‌ها و تنظیمات تبدیل تاریخ میلادی به شمسی</p>
+        </header>
+
+        <!-- نوتیفیکیشن -->
+        <div id="notification" class="notification" style="display: none;"></div>
+
+        <!-- تنظیمات عمومی -->
+        <div class="card">
+            <h2 class="card-title">
+                <span class="card-icon">🔧</span>
+                تنظیمات عمومی
+            </h2>
+
+            <div class="form-group">
+                <label class="form-label">وضعیت افزونه</label>
+                <div class="btn-group">
+                    <button id="enableBtn" class="btn btn-primary">فعال کردن</button>
+                    <button id="disableBtn" class="btn btn-secondary">غیرفعال کردن</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- مدیریت دامنه‌ها -->
+        <div class="card">
+            <h2 class="card-title">
+                <span class="card-icon">🌐</span>
+                مدیریت دامنه‌ها
+            </h2>
+
+            <div class="form-group">
+                <label for="domainInput" class="form-label">افزودن دامنه جدید</label>
+                <input type="text" id="domainInput" class="form-input" 
+                       placeholder="مثال: google.com یا *.github.com یا 192.168.1.1">
+                <div class="form-help">
+                    از * برای شامل کردن تمام زیردامنه‌ها استفاده کنید. برای همه دامنه‌ها از * استفاده کنید.
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button id="addDomainBtn" class="btn btn-primary">
+                    <span>➕</span>
+                    افزودن دامنه
+                </button>
+                <button id="allowAllBtn" class="btn btn-secondary">
+                    <span>🌐</span>
+                    اجازه به همه دامنه‌ها
+                </button>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">دامنه‌های مجاز</label>
+                <div id="domainList" class="domain-list">
+                    <!-- دامنه‌ها اینجا نمایش داده می‌شوند -->
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار و اطلاعات -->
+        <div class="card">
+            <h2 class="card-title">
+                <span class="card-icon">📊</span>
+                آمار و اطلاعات
+            </h2>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalConverted">0</div>
+                    <div class="stat-label">تاریخ تبدیل شده</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDomains">0</div>
+                    <div class="stat-label">دامنه مجاز</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- عملیات -->
+        <div class="card">
+            <h2 class="card-title">
+                <span class="card-icon">🗑️</span>
+                عملیات
+            </h2>
+
+            <div class="btn-group">
+                <button id="resetStatsBtn" class="btn btn-secondary">
+                    <span>🔄</span>
+                    پاک کردن آمار
+                </button>
+                <button id="resetAllBtn" class="btn btn-danger">
+                    <span>⚠️</span>
+                    بازنشانی همه تنظیمات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html>

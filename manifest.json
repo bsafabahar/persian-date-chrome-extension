@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "تبدیل تاریخ میلادی به شمسی",
+  "version": "1.0.0",
+  "description": "تبدیل خودکار تاریخ‌های میلادی به شمسی در وب‌سایت‌ها",
+  "author": "Babak Safabahar",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/persian-date.js", "content.js"],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "تبدیل تاریخ میلادی به شمسی",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
