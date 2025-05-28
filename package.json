@@ -10,8 +10,7 @@
     "iranian",
     "jalali"
   ],  "author": {
-    "name": "Babak Safabahar",
-    "email": "babak.safabahar@example.com"
+    "name": "Babak Safabahar"
   },
   "license": "MIT",  "repository": {
     "type": "git",

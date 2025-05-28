@@ -60,4 +60,3 @@ git clone https://github.com/babaksafabahar/persian-date-chrome-extension.git
 1. فایل README.md را مطالعه کنید
 2. در بخش Issues گزارش دهید
 3. **توسعه‌دهنده**: Babak Safabahar
-4. **ایمیل**: babak.safabahar@example.com

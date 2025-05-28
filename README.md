@@ -161,7 +161,6 @@ persian-date-chrome-extension/
 ## 📞 پشتیبانی
 
 - **توسعه‌دهنده**: Babak Safabahar
-- **ایمیل**: babak.safabahar@example.com
 - **GitHub Issues**: [لینک Issues](https://github.com/babaksafabahar/persian-date-chrome-extension/issues)
 
 ## 🙏 تشکر
