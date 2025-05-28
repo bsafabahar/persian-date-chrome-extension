@@ -112,15 +112,26 @@ class PersianDateConverter {
         });
 
         console.log(`✅ Conversion complete! Converted ${this.convertedCount} dates total.`);
-    }
-
-    containsDate(text) {
-        if (!text || text.trim().length < 8) return false;
+    }    containsDate(text) {
+        if (!text || text.trim().length < 6) return false;
         
-        // Look for common date patterns
+        // Look for comprehensive date patterns
         const patterns = [
             /\b\d{4}[-\/]\d{1,2}[-\/]\d{1,2}\b/,  // 2024-03-20 or 2024/03/20
-            /\b\d{1,2}[-\/]\d{1,2}[-\/]\d{4}\b/   // 20-03-2024 or 20/03/2024
+            /\b\d{1,2}[-\/]\d{1,2}[-\/]\d{4}\b/,  // 20-03-2024 or 20/03/2024
+            /\b\d{1,2}[-\/]\d{1,2}[-\/]\d{2}\b/,  // 20/03/24 or 20-03-24
+            // Month abbreviations with year
+            /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-\/\s]\d{1,2}[-\/\s]\d{2,4}\b/i,
+            /\b\d{1,2}[-\/\s](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-\/\s]\d{2,4}\b/i,
+            // Full month names
+            /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b/i,
+            /\b\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b/i,
+            // Time patterns that often accompany dates
+            /\b\d{1,2}:\d{2}\s*(AM|PM|am|pm)\b/,
+            // Relative time expressions
+            /\b(today|yesterday|tomorrow)\b/i,
+            /\b\d+\s+(day|days|week|weeks|month|months|year|years)\s+ago\b/i,
+            /\b(a|an)\s+(day|week|month|year)\s+ago\b/i
         ];
 
         return patterns.some(pattern => pattern.test(text));
@@ -139,10 +150,24 @@ class PersianDateConverter {
         } catch (error) {
             console.error(`❌ Error processing node ${index}:`, error);
         }
-    }
-
-    convertDatesInText(text) {
+    }    convertDatesInText(text) {
         let convertedText = text;
+        
+        // Month name mapping
+        const monthMap = {
+            'jan': 1, 'january': 1,
+            'feb': 2, 'february': 2,
+            'mar': 3, 'march': 3,
+            'apr': 4, 'april': 4,
+            'may': 5,
+            'jun': 6, 'june': 6,
+            'jul': 7, 'july': 7,
+            'aug': 8, 'august': 8,
+            'sep': 9, 'september': 9,
+            'oct': 10, 'october': 10,
+            'nov': 11, 'november': 11,
+            'dec': 12, 'december': 12
+        };
         
         // Convert YYYY-MM-DD and YYYY/MM/DD formats
         convertedText = convertedText.replace(/\b(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})\b/g, (match, year, month, day) => {
@@ -158,9 +183,160 @@ class PersianDateConverter {
             }
             return match;
         });
+        
+        // Convert DD/MM/YY format (2-digit year)
+        convertedText = convertedText.replace(/\b(\d{1,2})[-\/](\d{1,2})[-\/](\d{2})\b/g, (match, day, month, year) => {
+            const yearNum = parseInt(year);
+            // Convert 2-digit year to 4-digit (assume 20xx for years 00-30, 19xx for 31-99)
+            const fullYear = yearNum <= 30 ? 2000 + yearNum : 1900 + yearNum;
+            if (parseInt(month) <= 12 && parseInt(day) <= 31) {
+                return this.convertToPersian(fullYear, parseInt(month), parseInt(day), match);
+            }
+            return match;
+        });
+        
+        // Convert formats with month abbreviations: DD/MMM/YY or DD-MMM-YY
+        convertedText = convertedText.replace(/\b(\d{1,2})[-\/\s](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-\/\s](\d{2,4})\b/gi, (match, day, monthName, year) => {
+            const month = monthMap[monthName.toLowerCase()];
+            if (month) {
+                let yearNum = parseInt(year);
+                // Handle 2-digit years
+                if (yearNum < 100) {
+                    yearNum = yearNum <= 30 ? 2000 + yearNum : 1900 + yearNum;
+                }
+                return this.convertToPersian(yearNum, month, parseInt(day), match);
+            }
+            return match;
+        });
+        
+        // Convert formats: MMM/DD/YY or MMM-DD-YY
+        convertedText = convertedText.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[-\/\s](\d{1,2})[-\/\s](\d{2,4})\b/gi, (match, monthName, day, year) => {
+            const month = monthMap[monthName.toLowerCase()];
+            if (month) {
+                let yearNum = parseInt(year);
+                // Handle 2-digit years
+                if (yearNum < 100) {
+                    yearNum = yearNum <= 30 ? 2000 + yearNum : 1900 + yearNum;
+                }
+                return this.convertToPersian(yearNum, month, parseInt(day), match);
+            }
+            return match;
+        });
+
+        // Convert full month names: Month DD, YYYY
+        convertedText = convertedText.replace(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})\b/gi, (match, monthName, day, year) => {
+            const month = monthMap[monthName.toLowerCase()];
+            if (month) {
+                return this.convertToPersian(parseInt(year), month, parseInt(day), match);
+            }
+            return match;
+        });        // Convert DD Month YYYY format
+        convertedText = convertedText.replace(/\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b/gi, (match, day, monthName, year) => {
+            const month = monthMap[monthName.toLowerCase()];
+            if (month) {
+                return this.convertToPersian(parseInt(year), month, parseInt(day), match);
+            }
+            return match;
+        });
+
+        // Convert relative date expressions
+        const today = new Date();
+        
+        // Handle "X days ago", "X weeks ago", etc.
+        convertedText = convertedText.replace(/\b(\d+)\s+(day|days|week|weeks|month|months|year|years)\s+ago\b/gi, (match, number, unit) => {
+            try {
+                const targetDate = new Date(today);
+                const num = parseInt(number);
+                
+                switch (unit.toLowerCase()) {
+                    case 'day':
+                    case 'days':
+                        targetDate.setDate(targetDate.getDate() - num);
+                        break;
+                    case 'week':
+                    case 'weeks':
+                        targetDate.setDate(targetDate.getDate() - (num * 7));
+                        break;
+                    case 'month':
+                    case 'months':
+                        targetDate.setMonth(targetDate.getMonth() - num);
+                        break;
+                    case 'year':
+                    case 'years':
+                        targetDate.setFullYear(targetDate.getFullYear() - num);
+                        break;
+                }
+                
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(targetDate);
+                return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.warn('Error converting relative date:', match, error);
+                return match;
+            }
+        });
+        
+        // Handle "a/an X ago"
+        convertedText = convertedText.replace(/\b(a|an)\s+(day|week|month|year)\s+ago\b/gi, (match, article, unit) => {
+            try {
+                const targetDate = new Date(today);
+                
+                switch (unit.toLowerCase()) {
+                    case 'day':
+                        targetDate.setDate(targetDate.getDate() - 1);
+                        break;
+                    case 'week':
+                        targetDate.setDate(targetDate.getDate() - 7);
+                        break;
+                    case 'month':
+                        targetDate.setMonth(targetDate.getMonth() - 1);
+                        break;
+                    case 'year':
+                        targetDate.setFullYear(targetDate.getFullYear() - 1);
+                        break;
+                }
+                
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(targetDate);
+                return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.warn('Error converting relative date:', match, error);
+                return match;
+            }
+        });
+        
+        // Handle simple keywords
+        convertedText = convertedText.replace(/\byesterday\b/gi, (match) => {
+            try {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(yesterday);
+                return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+            } catch (error) {
+                return match;
+            }
+        });
+        
+        convertedText = convertedText.replace(/\btoday\b/gi, (match) => {
+            try {
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(today);
+                return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+            } catch (error) {
+                return match;
+            }
+        });
+        
+        convertedText = convertedText.replace(/\btomorrow\b/gi, (match) => {
+            try {
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(tomorrow);
+                return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+            } catch (error) {
+                return match;
+            }
+        });
 
         return convertedText;
-    }    convertToPersian(year, month, day, originalMatch) {
+    }convertToPersian(year, month, day, originalMatch) {
         try {
             console.log(`📅 Converting: ${originalMatch} (${year}/${month}/${day})`);
             

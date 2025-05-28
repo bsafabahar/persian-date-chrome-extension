@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Date Extension - Date Format Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .date-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #666;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .status {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗓️ Persian Date Extension Test Page</h1>
+    
+    <div class="status">
+        <strong>📋 Test Status:</strong> This page contains various date formats to test the Persian Date Chrome Extension.
+        <br><strong>📍 Location:</strong> <span id="url-display"></span>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 User Reported Issues</h2>
+        <p>These are the specific date formats that were not converting properly:</p>
+        <div class="date-item">Created: 21/Apr/25 9:50 AM</div>
+        <div class="date-item">Updated: 2 days ago 1:46 PM</div>
+        <div class="date-item">Resolved: 21/Apr/25 9:50 AM</div>
+        <div class="date-item">Start date (WBSGantt): None</div>
+        <div class="date-item">Target end: None</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📅 Standard Date Formats</h2>
+        <div class="date-item">Date: 2024-03-20</div>
+        <div class="date-item">Date: 20/03/2024</div>
+        <div class="date-item">Date: 03/20/2024</div>
+        <div class="date-item">Date: 20-03-2024</div>
+        <div class="date-item">Date: 2024/03/20</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Month Abbreviation Formats</h2>
+        <div class="date-item">Meeting: 15/Jan/24</div>
+        <div class="date-item">Deadline: 22-Feb-2024</div>
+        <div class="date-item">Event: Mar/10/24</div>
+        <div class="date-item">Release: 05 Apr 2024</div>
+        <div class="date-item">Conference: May 15, 2024</div>
+        <div class="date-item">Launch: 30 Jun 24</div>
+        <div class="date-item">Review: Jul 08, 2024</div>
+        <div class="date-item">Update: 12/Aug/24</div>
+        <div class="date-item">Testing: Sep-20-2024</div>
+        <div class="date-item">Demo: 25 Oct 24</div>
+        <div class="date-item">Training: Nov/30/2024</div>
+        <div class="date-item">Holiday: 25 Dec 2024</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📖 Full Month Names</h2>
+        <div class="date-item">Start: January 15, 2024</div>
+        <div class="date-item">End: February 28, 2024</div>
+        <div class="date-item">Milestone: 20 March 2024</div>
+        <div class="date-item">Delivery: April 10, 2024</div>
+        <div class="date-item">Maintenance: 5 May 2024</div>
+        <div class="date-item">Upgrade: June 22, 2024</div>
+    </div>
+
+    <div class="test-section">
+        <h2>⏰ Dates with Time</h2>
+        <div class="date-item">Created: 21/Apr/25 9:50 AM</div>
+        <div class="date-item">Modified: 15/Mar/24 2:30 PM</div>
+        <div class="date-item">Submitted: 08 Jan 2024 11:45 AM</div>
+        <div class="date-item">Approved: Feb 12, 2024 4:20 PM</div>
+        <div class="date-item">Published: 2024-05-10 8:15 AM</div>
+    </div>    <div class="test-section">
+        <h2>🕒 Relative Date Expressions</h2>
+        <div class="date-item">Modified: 2 days ago</div>
+        <div class="date-item">Created: 1 week ago</div>
+        <div class="date-item">Updated: a month ago</div>
+        <div class="date-item">Published: yesterday</div>
+        <div class="date-item">Scheduled: today</div>
+        <div class="date-item">Due: tomorrow</div>
+        <div class="date-item">Reviewed: 3 weeks ago</div>
+        <div class="date-item">Submitted: a day ago</div>
+        <div class="date-item">Approved: 6 months ago</div>
+        <div class="date-item">Released: a year ago</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔄 Mixed Content</h2>        <p>The meeting is scheduled for <strong>21/Apr/25</strong> at 9:50 AM in the main conference room.</p>
+        <p>Please submit your report by <strong>15/Mar/24</strong> before 5:00 PM.</p>
+        <p>The project was created on <strong>January 10, 2024</strong> and last updated <strong>2 days ago</strong>.</p>
+        <p>Important dates: Start: <strong>05/Feb/24</strong>, Milestone: <strong>Mar 15, 2024</strong>, End: <strong>30 Apr 2024</strong></p>
+        <p>Status changes: Created <strong>yesterday</strong>, reviewed <strong>3 days ago</strong>, approved <strong>a week ago</strong>.</p>
+    </div>
+
+    <script>
+        // Display current URL
+        document.getElementById('url-display').textContent = window.location.href;
+        
+        // Log extension status
+        setTimeout(() => {
+            console.log('🔍 Extension check:');
+            console.log('- Persian Date Extension Active:', !!window.persianDateExtension);
+            console.log('- PersianDate Library Available:', typeof PersianDate !== 'undefined');
+            
+            if (window.persianDateExtension) {
+                console.log('✅ Extension is loaded and running');
+            } else {
+                console.log('❌ Extension not detected');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
