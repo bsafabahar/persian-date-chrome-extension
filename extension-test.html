@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Test - Persian Date Conversion</title>
+    <script src="lib/persian-date.js"></script>
+    <script src="content.js"></script>
+</head>
+<body>
+    <h1>Extension Test - Persian Date Conversion</h1>
+    
+    <div id="test-content">
+        <h2>Test Content with Various Date Formats</h2>
+        <p>Today is 21/Apr/25 9:50 AM</p>
+        <p>Meeting was 2 days ago 1:46 PM</p>
+        <p>The event is on May 22, 2025</p>
+        <p>Deadline: 2025-05-31</p>
+        <p>Started: 15-Mar-24</p>
+        <p>Published yesterday at 3:30 PM</p>
+        <p>Last updated a week ago</p>
+        <p>Conference on June 15, 2025</p>
+    </div>
+    
+    <div id="conversion-results" style="margin-top: 20px; padding: 10px; background-color: #f0f0f0;">
+        <h3>Manual Conversion Tests</h3>
+        <div id="manual-tests"></div>
+    </div>
+    
+    <script>
+        // Manual tests to verify the conversion works
+        const manualTests = document.getElementById('manual-tests');
+        
+        function testManualConversion(input, description) {
+            try {
+                // Test the date conversion directly
+                const date = new Date(input);
+                if (!isNaN(date.getTime())) {
+                    const [jYear, jMonth, jDay] = PersianDate.toJalali(date);
+                    const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+                    
+                    // Check if this is the problematic 1404/02/31
+                    if (result === '1404/02/31') {
+                        manualTests.innerHTML += `<p style="color: red; font-weight: bold;">❌ ${description}: ${input} → ${result} (INVALID DATE!)</p>`;
+                    } else {
+                        manualTests.innerHTML += `<p style="color: green;">✅ ${description}: ${input} → ${result}</p>`;
+                    }
+                } else {
+                    manualTests.innerHTML += `<p style="color: orange;">⚠️ ${description}: ${input} → Invalid input date</p>`;
+                }
+            } catch (error) {
+                manualTests.innerHTML += `<p style="color: red;">❌ ${description}: ${input} → Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Test the problematic dates
+        testManualConversion('2025-04-21', 'April 21, 2025 (similar to 21/Apr/25)');
+        testManualConversion('2025-05-22', 'May 22, 2025');
+        testManualConversion('2025-05-31', 'May 31, 2025');
+        testManualConversion('2025-03-15', 'March 15, 2025');
+        
+        // Wait a moment then test the extension conversion
+        setTimeout(() => {
+            manualTests.innerHTML += '<h4>Extension Conversion Results:</h4>';
+            
+            // Check if the extension has converted the dates in the test content
+            const testContent = document.getElementById('test-content');
+            const convertedText = testContent.innerHTML;
+            
+            if (convertedText.includes('1404/02/31')) {
+                manualTests.innerHTML += '<p style="color: red; font-weight: bold;">🚨 Extension still producing 1404/02/31!</p>';
+            } else if (convertedText.includes('1404/')) {
+                manualTests.innerHTML += '<p style="color: green;">✅ Extension is converting to 1404 dates (good)</p>';
+            } else {
+                manualTests.innerHTML += '<p style="color: orange;">⚠️ No 1404 dates found - extension may not be running</p>';
+            }
+            
+            manualTests.innerHTML += `<p>Converted content preview: ${convertedText.substring(0, 200)}...</p>`;
+            
+        }, 2000);
+    </script>
+</body>
+</html>

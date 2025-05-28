@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fixed Persian Date Conversion</title>
+    <script src="lib/persian-date.js"></script>
+</head>
+<body>
+    <h1>Test Fixed Persian Date Conversion</h1>
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function testConversion(dateStr, description) {
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    output.innerHTML += `<p style="color: red;">${description}: Invalid input date - ${dateStr}</p>`;
+                    return;
+                }
+                
+                const [jYear, jMonth, jDay] = PersianDate.toJalali(date);
+                const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+                
+                // Validate Persian date
+                let isValid = true;
+                let validationMessage = '';
+                
+                if (jYear < 1 || jMonth < 1 || jMonth > 12 || jDay < 1) {
+                    isValid = false;
+                    validationMessage = ' ❌ INVALID: Basic range violation';
+                } else if (jMonth <= 6 && jDay > 31) {
+                    isValid = false;
+                    validationMessage = ' ❌ INVALID: Months 1-6 cannot have > 31 days';
+                } else if (jMonth > 6 && jMonth <= 11 && jDay > 30) {
+                    isValid = false;
+                    validationMessage = ' ❌ INVALID: Months 7-11 cannot have > 30 days';
+                } else if (jMonth === 12) {
+                    const maxDays = PersianDate.isLeapYear(jYear) ? 30 : 29;
+                    if (jDay > maxDays) {
+                        isValid = false;
+                        validationMessage = ` ❌ INVALID: Month 12 in year ${jYear} cannot have > ${maxDays} days`;
+                    }
+                }
+                
+                const color = isValid ? 'green' : 'red';
+                output.innerHTML += `<p style="color: ${color};">${description}: ${dateStr} → ${result}${validationMessage}</p>`;
+                
+                if (result === '1404/02/31') {
+                    output.innerHTML += `<p style="color: red; font-weight: bold;">🚨 BUG STILL EXISTS! ${dateStr} produces 1404/02/31</p>`;
+                } else if (result.includes('1404/02/32') || result.includes('1404/02/33')) {
+                    output.innerHTML += `<p style="color: red; font-weight: bold;">🚨 NEW BUG! ${dateStr} produces ${result}</p>`;
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p style="color: red;">${description}: ERROR - ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        output.innerHTML += '<h2>Testing Dates Around Persian Month 2 Boundary</h2>';
+        
+        // Test dates around where the bug was occurring
+        const criticalDates = [
+            '2025-05-20', '2025-05-21', '2025-05-22', '2025-05-23', 
+            '2025-05-24', '2025-05-25', '2025-05-26', '2025-05-27',
+            '2025-05-28', '2025-05-29', '2025-05-30', '2025-05-31',
+            '2025-06-01', '2025-06-02'
+        ];
+        
+        criticalDates.forEach(dateStr => {
+            testConversion(dateStr, `Critical test`);
+        });
+        
+        output.innerHTML += '<h2>Testing User Reported Date Formats</h2>';
+        
+        // Test the original problematic dates
+        testConversion('2025-04-21', 'April 21, 2025 (like 21/Apr/25)');
+        
+        // Test some edge cases
+        output.innerHTML += '<h2>Testing Edge Cases</h2>';
+        
+        const edgeCases = [
+            '2024-12-31', // End of Gregorian year
+            '2025-01-01', // Start of Gregorian year
+            '2025-03-20', // Around Persian new year
+            '2025-03-21', // Persian new year
+            '2025-03-22', // Day after Persian new year
+        ];
+        
+        edgeCases.forEach(dateStr => {
+            testConversion(dateStr, 'Edge case');
+        });
+        
+        output.innerHTML += '<h2>Testing Month Boundaries</h2>';
+        
+        // Test all Persian month boundaries
+        const monthBoundaryDates = [
+            '2025-04-20', // End of Persian month 1
+            '2025-04-21', // Start of Persian month 2
+            '2025-05-21', // End of Persian month 2
+            '2025-05-22', // Start of Persian month 3
+            '2025-06-21', // End of Persian month 3
+            '2025-06-22', // Start of Persian month 4
+        ];
+        
+        monthBoundaryDates.forEach(dateStr => {
+            testConversion(dateStr, 'Month boundary');
+        });
+    </script>
+</body>
+</html>

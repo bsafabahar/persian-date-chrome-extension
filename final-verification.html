@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final Verification - Persian Date Fix</title>
+    <script src="lib/persian-date.js"></script>
+</head>
+<body>
+    <h1>Final Verification - Persian Date Fix</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Test the specific case that was causing 1404/02/31
+        function runComprehensiveTest() {
+            results.innerHTML = '<h2>🔍 Comprehensive Persian Date Conversion Test</h2>';
+            
+            let totalTests = 0;
+            let passedTests = 0;
+            let failedTests = 0;
+            
+            function testDate(inputDate, description, expectedIssues = []) {
+                totalTests++;
+                
+                try {
+                    const date = new Date(inputDate);
+                    if (isNaN(date.getTime())) {
+                        results.innerHTML += `<p style="color: orange;">⚠️ ${description}: Invalid input date "${inputDate}"</p>`;
+                        return;
+                    }
+                    
+                    const [jYear, jMonth, jDay] = PersianDate.toJalali(date);
+                    const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+                    
+                    // Validate the result
+                    let isValid = true;
+                    let issues = [];
+                    
+                    if (jYear < 1 || jMonth < 1 || jMonth > 12 || jDay < 1) {
+                        isValid = false;
+                        issues.push('Basic range violation');
+                    }
+                    
+                    if (jMonth <= 6 && jDay > 31) {
+                        isValid = false;
+                        issues.push(`Month ${jMonth} cannot have ${jDay} days (max 31)`);
+                    } else if (jMonth > 6 && jMonth <= 11 && jDay > 30) {
+                        isValid = false;
+                        issues.push(`Month ${jMonth} cannot have ${jDay} days (max 30)`);
+                    } else if (jMonth === 12) {
+                        const maxDays = PersianDate.isLeapYear(jYear) ? 30 : 29;
+                        if (jDay > maxDays) {
+                            isValid = false;
+                            issues.push(`Month 12 in year ${jYear} cannot have ${jDay} days (max ${maxDays})`);
+                        }
+                    }
+                    
+                    // Check for the specific bug we're fixing
+                    if (result === '1404/02/31') {
+                        isValid = false;
+                        issues.push('⚠️ THE ORIGINAL BUG: 1404/02/31');
+                    }
+                    
+                    const status = isValid ? '✅' : '❌';
+                    const color = isValid ? 'green' : 'red';
+                    
+                    if (isValid) {
+                        passedTests++;
+                    } else {
+                        failedTests++;
+                    }
+                    
+                    const issueText = issues.length > 0 ? ` - Issues: ${issues.join(', ')}` : '';
+                    results.innerHTML += `<p style="color: ${color};">${status} ${description}: "${inputDate}" → ${result}${issueText}</p>`;
+                    
+                } catch (error) {
+                    failedTests++;
+                    results.innerHTML += `<p style="color: red;">❌ ${description}: ERROR - ${error.message}</p>`;
+                }
+            }
+            
+            // Test critical dates around where the bug was happening
+            results.innerHTML += '<h3>🎯 Critical Test Cases (Where Bug Was Occurring)</h3>';
+            
+            testDate('2025-05-20', 'May 20, 2025');
+            testDate('2025-05-21', 'May 21, 2025');
+            testDate('2025-05-22', 'May 22, 2025');
+            testDate('2025-05-23', 'May 23, 2025');
+            testDate('2025-05-24', 'May 24, 2025');
+            testDate('2025-05-25', 'May 25, 2025');
+            testDate('2025-05-26', 'May 26, 2025');
+            testDate('2025-05-27', 'May 27, 2025');
+            testDate('2025-05-28', 'May 28, 2025');
+            testDate('2025-05-29', 'May 29, 2025');
+            testDate('2025-05-30', 'May 30, 2025');
+            testDate('2025-05-31', 'May 31, 2025');
+            
+            // Test user's original problematic dates
+            results.innerHTML += '<h3>📋 User Reported Problem Dates</h3>';
+            
+            testDate('2025-04-21', 'Similar to "21/Apr/25" format');
+            
+            // Test month boundaries
+            results.innerHTML += '<h3>🏔️ Persian Month Boundaries</h3>';
+            
+            testDate('2025-04-20', 'End of Persian Month 1 (Farvardin)');
+            testDate('2025-04-21', 'Start of Persian Month 2 (Ordibehesht)');
+            testDate('2025-05-21', 'End of Persian Month 2 (Ordibehesht)');
+            testDate('2025-05-22', 'Start of Persian Month 3 (Khordad)');
+            testDate('2025-06-21', 'End of Persian Month 3 (Khordad)');
+            testDate('2025-06-22', 'Start of Persian Month 4 (Tir)');
+            testDate('2025-07-22', 'End of Persian Month 4 (Tir)');
+            testDate('2025-07-23', 'Start of Persian Month 5 (Mordad)');
+            
+            // Test leap year boundary
+            results.innerHTML += '<h3>🗓️ Leap Year Tests</h3>';
+            
+            testDate('2025-03-19', 'Last day of Persian year 1403');
+            testDate('2025-03-20', 'Persian New Year 1404');
+            testDate('2026-03-20', 'End of Persian year 1404');
+            testDate('2026-03-21', 'Persian New Year 1405');
+            
+            // Summary
+            results.innerHTML += '<hr><h2>📊 Test Summary</h2>';
+            results.innerHTML += `<p><strong>Total Tests:</strong> ${totalTests}</p>`;
+            results.innerHTML += `<p style="color: green;"><strong>Passed:</strong> ${passedTests}</p>`;
+            results.innerHTML += `<p style="color: red;"><strong>Failed:</strong> ${failedTests}</p>`;
+            
+            if (failedTests === 0) {
+                results.innerHTML += '<p style="color: green; font-weight: bold; font-size: 18px;">🎉 ALL TESTS PASSED! The bug appears to be fixed!</p>';
+            } else {
+                results.innerHTML += '<p style="color: red; font-weight: bold; font-size: 18px;">⚠️ Some tests failed. The bug may still exist.</p>';
+            }
+        }
+        
+        // Run the test
+        runComprehensiveTest();
+    </script>
+</body>
+</html>

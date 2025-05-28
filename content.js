@@ -336,7 +336,7 @@ class PersianDateConverter {
         });
 
         return convertedText;
-    }convertToPersian(year, month, day, originalMatch) {
+    }    convertToPersian(year, month, day, originalMatch) {
         try {
             console.log(`📅 Converting: ${originalMatch} (${year}/${month}/${day})`);
             
@@ -352,6 +352,13 @@ class PersianDateConverter {
             
             // استفاده از متد استاتیک کتابخانه
             const [jYear, jMonth, jDay] = PersianDate.toJalali(gregorianDate);
+            
+            // Validate Persian date result
+            if (!this.isValidPersianDate(jYear, jMonth, jDay)) {
+                console.warn(`⚠️ Invalid Persian date result: ${jYear}/${jMonth}/${jDay} for ${originalMatch}`);
+                return originalMatch;
+            }
+            
             const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
             
             this.convertedCount++;
@@ -362,6 +369,29 @@ class PersianDateConverter {
             console.error(`❌ Conversion error for ${originalMatch}:`, error);
             return originalMatch;
         }
+    }
+
+    // Validate Persian calendar dates
+    isValidPersianDate(year, month, day) {
+        // Basic range checks
+        if (year < 1 || month < 1 || month > 12 || day < 1) {
+            return false;
+        }
+        
+        // Days per month in Persian calendar
+        let maxDays;
+        if (month <= 6) {
+            // First 6 months have 31 days
+            maxDays = 31;
+        } else if (month <= 11) {
+            // Months 7-11 have 30 days
+            maxDays = 30;
+        } else {
+            // Month 12 (Esfand) has 29 days in normal years, 30 in leap years
+            maxDays = PersianDate.isLeapYear(year) ? 30 : 29;
+        }
+        
+        return day <= maxDays;
     }
 
     setupMutationObserver() {
