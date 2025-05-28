@@ -14,6 +14,7 @@ class PopupManager {
   constructor() {
     this.elements = {};
     this.settings = {};
+    this.currentPage = 1;
     this.init();
   }
 
@@ -23,7 +24,6 @@ class PopupManager {
     this.loadSettings();
     this.updateCurrentDomain();
   }
-
   setupElements() {
     this.elements = {
       enableToggle: document.getElementById('enableToggle'),
@@ -31,13 +31,22 @@ class PopupManager {
       convertedCount: document.getElementById('convertedCount'),
       currentDomain: document.getElementById('currentDomain'),
       refreshBtn: document.getElementById('refreshBtn'),
-      optionsBtn: document.getElementById('optionsBtn'),
+      settingsBtn: document.getElementById('settingsBtn'),
       domainStatus: document.getElementById('domainStatus'),
       domainIndicator: document.getElementById('domainIndicator'),
-      domainText: document.getElementById('domainText')
+      domainText: document.getElementById('domainText'),
+      addCurrentDomainBtn: document.getElementById('addCurrentDomainBtn'),
+      backBtn: document.getElementById('backBtn'),
+      domainInput: document.getElementById('domainInput'),
+      addDomainBtn: document.getElementById('addDomainBtn'),
+      allowAllBtn: document.getElementById('allowAllBtn'),
+      domainList: document.getElementById('domainList'),
+      resetStatsBtn: document.getElementById('resetStatsBtn'),
+      resetAllBtn: document.getElementById('resetAllBtn'),
+      page1: document.getElementById('page1'),
+      page2: document.getElementById('page2')
     };
   }
-
   setupEventListeners() {
     // تغییر وضعیت افزونه
     this.elements.enableToggle.addEventListener('change', (e) => {
@@ -50,8 +59,45 @@ class PopupManager {
     });
 
     // دکمه تنظیمات
-    this.elements.optionsBtn.addEventListener('click', () => {
-      this.openOptionsPage();
+    this.elements.settingsBtn.addEventListener('click', () => {
+      this.showPage(2);
+    });
+
+    // دکمه بازگشت
+    this.elements.backBtn.addEventListener('click', () => {
+      this.showPage(1);
+    });
+
+    // دکمه افزودن دامنه فعلی
+    this.elements.addCurrentDomainBtn.addEventListener('click', () => {
+      this.addCurrentDomain();
+    });
+
+    // دکمه افزودن دامنه جدید
+    this.elements.addDomainBtn.addEventListener('click', () => {
+      this.addDomain();
+    });
+
+    // دکمه اجازه به همه دامنه‌ها
+    this.elements.allowAllBtn.addEventListener('click', () => {
+      this.allowAllDomains();
+    });
+
+    // دکمه پاک کردن آمار
+    this.elements.resetStatsBtn.addEventListener('click', () => {
+      this.resetStats();
+    });
+
+    // دکمه بازنشانی همه تنظیمات
+    this.elements.resetAllBtn.addEventListener('click', () => {
+      this.resetAll();
+    });
+
+    // Enter key در input دامنه
+    this.elements.domainInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        this.addDomain();
+      }
     });
 
     // گوش دادن به تغییرات storage
@@ -76,7 +122,6 @@ class PopupManager {
       this.showError('خطا در بارگذاری تنظیمات');
     }
   }
-
   updateUI() {
     // وضعیت افزونه
     const isEnabled = this.settings.enabled || false;
@@ -90,6 +135,9 @@ class PopupManager {
 
     // وضعیت دامنه فعلی
     this.checkCurrentDomainStatus();
+
+    // بروزرسانی لیست دامنه‌ها در صفحه تنظیمات
+    this.updateDomainList();
   }
 
   async updateCurrentDomain() {
@@ -129,28 +177,29 @@ class PopupManager {
           }
           return domain === allowedDomain || domain.includes(allowedDomain);
         });
-      }
-
-      if (isAllowed) {
-        this.updateDomainStatus('دامنه مجاز', '🟢');
+      }      if (isAllowed) {
+        this.updateDomainStatus('افزونه برای این دامنه فعال است', '🟢');
       } else {
-        this.updateDomainStatus('دامنه غیرمجاز', '🔴');
+        this.updateDomainStatus('افزونه برای این دامنه فعال نیست', '🔴');
+        // نمایش دکمه افزودن دامنه اگر دامنه مجاز نباشد
+        this.elements.addCurrentDomainBtn.style.display = 'inline-flex';
       }
     } catch (error) {
       
       this.updateDomainStatus('خطا در بررسی', '⚪');
     }
   }
-
   updateDomainStatus(text, indicator) {
     this.elements.domainText.textContent = text;
     this.elements.domainIndicator.textContent = indicator;
     
-    // اضافه کردن کلاس مناسب
+    // مخفی کردن دکمه افزودن دامنه به طور پیش‌فرض
+    this.elements.addCurrentDomainBtn.style.display = 'none';
+      // اضافه کردن کلاس مناسب
     this.elements.domainIndicator.className = 'domain-indicator';
-    if (text.includes('مجاز')) {
+    if (text.includes('فعال است')) {
       this.elements.domainIndicator.classList.add('allowed');
-    } else if (text.includes('غیرمجاز')) {
+    } else if (text.includes('فعال نیست')) {
       this.elements.domainIndicator.classList.add('blocked');
     }
   }
@@ -189,10 +238,181 @@ class PopupManager {
       this.showError('خطا در تازه‌سازی صفحه');
     }
   }
-
   openOptionsPage() {
     chrome.runtime.openOptionsPage();
     window.close();
+  }
+
+  showPage(pageNumber) {
+    // مخفی کردن همه صفحات
+    this.elements.page1.classList.remove('active');
+    this.elements.page2.classList.remove('active');
+
+    // نمایش صفحه مورد نظر
+    if (pageNumber === 1) {
+      this.elements.page1.classList.add('active');
+      this.currentPage = 1;
+    } else if (pageNumber === 2) {
+      this.elements.page2.classList.add('active');
+      this.currentPage = 2;
+      this.updateDomainList(); // بروزرسانی لیست دامنه‌ها
+    }
+  }
+
+  async getCurrentDomain() {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.url) {
+        const url = new URL(tab.url);
+        return url.hostname;
+      }
+    } catch (error) {
+      console.error('خطا در دریافت دامنه فعلی:', error);
+    }
+    return null;
+  }
+
+  async addCurrentDomain() {
+    try {
+      const domain = await this.getCurrentDomain();
+      if (!domain) {
+        this.showError('نتوانستم دامنه فعلی را تشخیص دهم');
+        return;
+      }
+
+      const allowedDomains = this.settings.allowedDomains || [];
+      
+      // بررسی اینکه دامنه قبلاً اضافه نشده باشد
+      if (allowedDomains.includes(domain)) {
+        this.showError('این دامنه قبلاً اضافه شده است');
+        return;
+      }
+
+      // اضافه کردن دامنه
+      allowedDomains.push(domain);
+      await chrome.storage.sync.set({ allowedDomains });
+      this.settings.allowedDomains = allowedDomains;
+
+      this.showSuccess(`دامنه ${domain} اضافه شد`);
+      this.updateUI();
+    } catch (error) {
+      console.error('خطا در افزودن دامنه فعلی:', error);
+      this.showError('خطا در افزودن دامنه');
+    }
+  }
+
+  async addDomain() {
+    const domain = this.elements.domainInput.value.trim();
+    if (!domain) {
+      this.showError('لطفاً دامنه را وارد کنید');
+      return;
+    }
+
+    try {
+      const allowedDomains = this.settings.allowedDomains || [];
+      
+      // بررسی اینکه دامنه قبلاً اضافه نشده باشد
+      if (allowedDomains.includes(domain)) {
+        this.showError('این دامنه قبلاً اضافه شده است');
+        return;
+      }
+
+      // اضافه کردن دامنه
+      allowedDomains.push(domain);
+      await chrome.storage.sync.set({ allowedDomains });
+      this.settings.allowedDomains = allowedDomains;
+
+      this.elements.domainInput.value = '';
+      this.showSuccess(`دامنه ${domain} اضافه شد`);
+      this.updateDomainList();
+    } catch (error) {
+      console.error('خطا در افزودن دامنه:', error);
+      this.showError('خطا در افزودن دامنه');
+    }
+  }
+
+  async allowAllDomains() {
+    try {
+      await chrome.storage.sync.set({ allowedDomains: ['*'] });
+      this.settings.allowedDomains = ['*'];
+      this.showSuccess('همه دامنه‌ها مجاز شدند');
+      this.updateDomainList();
+      this.updateUI();
+    } catch (error) {
+      console.error('خطا در مجاز کردن همه دامنه‌ها:', error);
+      this.showError('خطا در تنظیم دامنه‌ها');
+    }
+  }
+
+  async removeDomain(domain) {
+    try {
+      const allowedDomains = this.settings.allowedDomains || [];
+      const updatedDomains = allowedDomains.filter(d => d !== domain);
+      
+      await chrome.storage.sync.set({ allowedDomains: updatedDomains });
+      this.settings.allowedDomains = updatedDomains;
+      
+      this.showSuccess(`دامنه ${domain} حذف شد`);
+      this.updateDomainList();
+      this.updateUI();
+    } catch (error) {
+      console.error('خطا در حذف دامنه:', error);
+      this.showError('خطا در حذف دامنه');
+    }
+  }
+  updateDomainList() {
+    const domainList = this.elements.domainList;
+    const allowedDomains = this.settings.allowedDomains || [];
+
+    if (allowedDomains.length === 0) {
+      domainList.innerHTML = '<div class="domain-item">هیچ دامنه‌ای تنظیم نشده</div>';
+      return;
+    }
+
+    domainList.innerHTML = allowedDomains.map(domain => `
+      <div class="domain-item">
+        <span class="domain-name">${domain}</span>
+        <button class="domain-remove" data-domain="${domain}" title="حذف دامنه">
+          ✕
+        </button>
+      </div>
+    `).join('');
+
+    // اضافه کردن event listener برای دکمه‌های حذف
+    domainList.querySelectorAll('.domain-remove').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const domain = e.target.getAttribute('data-domain');
+        this.removeDomain(domain);
+      });
+    });
+  }
+
+  async resetStats() {
+    if (confirm('آیا از پاک کردن آمار اطمینان دارید؟')) {
+      try {
+        await chrome.storage.sync.set({ convertedCount: 0 });
+        this.settings.convertedCount = 0;
+        this.showSuccess('آمار پاک شد');
+        this.updateUI();
+      } catch (error) {
+        console.error('خطا در پاک کردن آمار:', error);
+        this.showError('خطا در پاک کردن آمار');
+      }
+    }
+  }
+
+  async resetAll() {
+    if (confirm('آیا از بازنشانی همه تنظیمات اطمینان دارید؟ این عمل قابل بازگشت نیست.')) {
+      try {
+        await chrome.storage.sync.clear();
+        this.settings = {};
+        this.showSuccess('همه تنظیمات بازنشانی شد');
+        this.loadSettings();
+      } catch (error) {
+        console.error('خطا در بازنشانی تنظیمات:', error);
+        this.showError('خطا در بازنشانی تنظیمات');
+      }
+    }
   }
 
   handleStorageChange(changes) {
@@ -294,6 +514,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 // شروع popup
+let popupManager;
 document.addEventListener('DOMContentLoaded', () => {
-  new PopupManager();
+  popupManager = new PopupManager();
 });

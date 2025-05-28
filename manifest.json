@@ -1,7 +1,6 @@
-{
-  "manifest_version": 3,
+{  "manifest_version": 3,
   "name": "تبدیل تاریخ میلادی به شمسی",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "تبدیل خودکار تاریخ‌های میلادی به شمسی در وب‌سایت‌ها",
   "author": "Babak Safabahar",
   "permissions": [

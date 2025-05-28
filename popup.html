@@ -18,59 +18,127 @@ Persian Date Chrome Extension - Popup Interface
         <header class="header">
             <img src="icons/icon48.png" alt="آیکون" class="logo">
             <h1 class="title">تبدیل تاریخ میلادی به شمسی</h1>
-        </header>
-
-        <main class="main-content">
-            <!-- وضعیت افزونه -->
-            <div class="status-section">
-                <div class="status-item">
-                    <label class="switch">
-                        <input type="checkbox" id="enableToggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span class="status-label">وضعیت افزونه</span>
+        </header>        <main class="main-content">
+            <!-- صفحه اول -->
+            <div id="page1" class="page active">
+                <!-- وضعیت افزونه -->
+                <div class="status-section">
+                    <div class="status-item">
+                        <label class="switch">
+                            <input type="checkbox" id="enableToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="status-label">وضعیت افزونه</span>
+                    </div>
+                    <div class="status-text" id="statusText">غیرفعال</div>
                 </div>
-                <div class="status-text" id="statusText">غیرفعال</div>
+
+                <!-- آمار -->
+                <div class="stats-section">
+                    <div class="stat-item">
+                        <span class="stat-number" id="convertedCount">0</span>
+                        <span class="stat-label">تاریخ تبدیل شده</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="currentDomain">--</span>
+                        <span class="stat-label">دامنه فعلی</span>
+                    </div>
+                </div>
+
+                <!-- دکمه‌های عملکرد -->
+                <div class="actions-section">
+                    <button class="btn btn-primary" id="refreshBtn">
+                        <span class="btn-icon">🔄</span>
+                        تازه‌سازی صفحه
+                    </button>
+                    
+                    <button class="btn btn-secondary" id="settingsBtn">
+                        <span class="btn-icon">⚙️</span>
+                        تنظیمات پیشرفته
+                    </button>
+                </div>
+
+                <!-- دامنه فعلی -->
+                <div class="domain-section">
+                    <div class="domain-status" id="domainStatus">
+                        <span class="domain-indicator" id="domainIndicator">⚪</span>
+                        <span class="domain-text" id="domainText">در حال بررسی...</span>
+                        <button class="btn btn-small btn-add-domain" id="addCurrentDomainBtn" style="display: none;">
+                            <span class="btn-icon">➕</span>
+                            افزودن دامنه
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- آمار -->
-            <div class="stats-section">
-                <div class="stat-item">
-                    <span class="stat-number" id="convertedCount">0</span>
-                    <span class="stat-label">تاریخ تبدیل شده</span>
+            <!-- صفحه دوم - تنظیمات پیشرفته -->
+            <div id="page2" class="page">
+                <!-- هدر صفحه تنظیمات -->                <div class="settings-header">
+                    <button class="btn btn-back" id="backBtn">
+                        <span class="btn-icon">→</span>
+                        بازگشت
+                    </button>
+                    <h2>تنظیمات پیشرفته</h2>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="currentDomain">--</span>
-                    <span class="stat-label">دامنه فعلی</span>
+
+                <!-- مدیریت دامنه‌ها -->
+                <div class="settings-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🌐</span>
+                        مدیریت دامنه‌ها
+                    </h3>
+
+                    <div class="form-group">
+                        <label for="domainInput" class="form-label">افزودن دامنه جدید</label>
+                        <input type="text" id="domainInput" class="form-input" 
+                               placeholder="مثال: google.com یا *.github.com">
+                        <div class="form-help">
+                            از * برای شامل کردن تمام زیردامنه‌ها استفاده کنید
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button id="addDomainBtn" class="btn btn-primary btn-small">
+                            <span>➕</span>
+                            افزودن
+                        </button>
+                        <button id="allowAllBtn" class="btn btn-secondary btn-small">
+                            <span>🌐</span>
+                            همه دامنه‌ها
+                        </button>
+                    </div>
+
+                    <div class="domain-list-container">
+                        <label class="form-label">دامنه‌های مجاز</label>
+                        <div id="domainList" class="domain-list">
+                            <!-- دامنه‌ها اینجا نمایش داده می‌شوند -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- عملیات -->
+                <div class="settings-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🗑️</span>
+                        عملیات
+                    </h3>
+
+                    <div class="btn-group">
+                        <button id="resetStatsBtn" class="btn btn-secondary btn-small">
+                            <span>🔄</span>
+                            پاک کردن آمار
+                        </button>
+                        <button id="resetAllBtn" class="btn btn-danger btn-small">
+                            <span>⚠️</span>
+                            بازنشانی همه
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- دکمه‌های عملکرد -->
-            <div class="actions-section">
-                <button class="btn btn-primary" id="refreshBtn">
-                    <span class="btn-icon">🔄</span>
-                    تازه‌سازی صفحه
-                </button>
-                
-                <button class="btn btn-secondary" id="optionsBtn">
-                    <span class="btn-icon">⚙️</span>
-                    تنظیمات پیشرفته
-                </button>
-            </div>
-
-            <!-- دامنه فعلی -->
-            <div class="domain-section">
-                <div class="domain-status" id="domainStatus">
-                    <span class="domain-indicator" id="domainIndicator">⚪</span>
-                    <span class="domain-text" id="domainText">در حال بررسی...</span>
-                </div>
-            </div>
-        </main>
-
-        <footer class="footer">
-            <div class="version">نسخه 1.0.0</div>
-            <div class="developer">توسعه یافته با ❤️</div>
-        </footer>
+        </main>            <footer class="footer">
+                <div class="version">نسخه 1.0.4</div>
+                <div class="developer">توسعه یافته با ❤️ توسط تیم <a href="https://hesabrasyar.ir" target="_blank">حسابرسیار</a></div>
+            </footer>
     </div>
 
     <script src="popup.js"></script>

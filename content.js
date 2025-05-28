@@ -13,16 +13,36 @@ class PersianDateConverter {
     constructor() {
         this.convertedCount = 0;
         this.processedNodes = new WeakSet();
+        this.isAllowed = false;
         this.init();
-    }    init() {
+    }
+
+    async init() {
+        // بررسی مجوز دامنه قبل از شروع
+        await this.checkDomainPermission();
+        
+        if (!this.isAllowed) {
+            console.log('Persian Date Extension: Domain not allowed');
+            return;
+        }
+
         // Wait for DOM and libraries to be ready
         this.waitForReady(() => {
             this.checkLibrary();
             this.startConversion();
         });
-    }
-
-    waitForReady(callback) {
+    }    async checkDomainPermission() {
+        try {
+            const response = await chrome.runtime.sendMessage({
+                action: 'checkDomain'
+            });
+            this.isAllowed = response && response.isAllowed;
+            console.log('Persian Date Extension: Domain permission check result:', this.isAllowed);
+        } catch (error) {
+            console.error('خطا در بررسی مجوز دامنه:', error);
+            this.isAllowed = false;
+        }
+    }    waitForReady(callback) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(callback, 300); // Extra delay for library loading
@@ -30,28 +50,55 @@ class PersianDateConverter {
         } else {
             setTimeout(callback, 300);
         }
-    }    checkLibrary() {
+    }
+
+    checkLibrary() {
         if (typeof PersianDate === 'undefined') {
+            console.error('Persian Date Extension: Library not loaded');
             return false;
         }
         
         // Test the library
         try {
             const [jYear, jMonth, jDay] = PersianDate.toJalali(new Date(2024, 2, 20)); // March 20, 2024
+            console.log('Persian Date Extension: Library test successful');
             return true;
         } catch (error) {
+            console.error('Persian Date Extension: Library test failed:', error);
             return false;
         }
-    }    startConversion() {
-        if (!document.body) {
+    }
+
+    startConversion() {
+        // Double check permission before starting
+        if (!this.isAllowed) {
+            console.log('Persian Date Extension: Conversion blocked - domain not allowed');
             return;
         }
 
+        if (!document.body) {
+            console.log('Persian Date Extension: Document body not ready');
+            return;
+        }
+
+        // Check library before conversion
+        if (!this.checkLibrary()) {
+            console.error('Persian Date Extension: Cannot start conversion - library not available');
+            return;
+        }
+
+        console.log('Persian Date Extension: Starting conversion...');
         this.convertDatesInDocument();
         
         // Set up observer for dynamic content
         this.setupMutationObserver();
     }    convertDatesInDocument() {
+        // Double check permission before converting
+        if (!this.isAllowed) {
+            console.log('Persian Date Extension: Conversion blocked - domain not allowed');
+            return;
+        }
+
         // Get all text nodes in the document
         const walker = document.createTreeWalker(
             document.body,
@@ -336,11 +383,15 @@ class PersianDateConverter {
                 
                 return originalMatch;
             }
-            
-            const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+              const result = `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
             
             this.convertedCount++;
-            
+              // Send message to background to increment counter
+            chrome.runtime.sendMessage({
+                action: 'incrementCounter'
+            }).catch(() => {
+                // Ignore errors if background script is not available
+            });
             
             return result;
         } catch (error) {
@@ -370,10 +421,14 @@ class PersianDateConverter {
         }
         
         return day <= maxDays;
-    }
-
-    setupMutationObserver() {
+    }    setupMutationObserver() {
         const observer = new MutationObserver((mutations) => {
+            // Check permission before processing mutations
+            if (!this.isAllowed) {
+                console.log('Persian Date Extension: Mutation processing blocked - domain not allowed');
+                return;
+            }
+
             let hasNewText = false;
             
             mutations.forEach((mutation) => {
@@ -400,7 +455,7 @@ class PersianDateConverter {
             });
             
             if (hasNewText) {
-                
+                console.log('Persian Date Extension: New content detected, processing...');
                 setTimeout(() => this.convertDatesInDocument(), 100);
             }
         });
@@ -410,9 +465,23 @@ class PersianDateConverter {
             subtree: true
         });
         
-        
+        console.log('Persian Date Extension: Mutation observer set up');
     }
 }
 
-// Initialize the converter
-const converter = new PersianDateConverter();
+// Initialize the converter only if DOM is ready
+async function initializeConverter() {
+    try {
+        const converter = new PersianDateConverter();
+        console.log('Persian Date Extension: Converter initialized');
+    } catch (error) {
+        console.error('Persian Date Extension: Failed to initialize:', error);
+    }
+}
+
+// Start initialization when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeConverter);
+} else {
+    initializeConverter();
+}

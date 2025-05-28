@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // برای async response
   }
   
-  if (request.action === 'incrementCount') {
+  if (request.action === 'incrementCounter') {
     incrementConvertedCount();
   }
   
@@ -51,7 +51,12 @@ async function checkDomainPermission(url) {
   try {
     const settings = await chrome.storage.sync.get(['enabled', 'allowedDomains']);
     
+    console.log('Background: Checking domain permission for:', url);
+    console.log('Background: Extension enabled:', settings.enabled);
+    console.log('Background: Allowed domains:', settings.allowedDomains);
+    
     if (!settings.enabled) {
+      console.log('Background: Extension is disabled');
       return false;
     }
     
@@ -59,22 +64,32 @@ async function checkDomainPermission(url) {
     
     // اگر * در لیست باشد، همه دامنه‌ها مجاز هستند
     if (allowedDomains.includes('*')) {
+      console.log('Background: All domains allowed (*)');
       return true;
     }
     
     const urlObj = new URL(url);
     const currentDomain = urlObj.hostname;
+    console.log('Background: Current domain:', currentDomain);
     
     // بررسی دامنه‌های مجاز
-    return allowedDomains.some(domain => {
+    const isAllowed = allowedDomains.some(domain => {
       if (domain.startsWith('*.')) {
         // پشتیبانی از wildcard subdomains
         const baseDomain = domain.substring(2);
-        return currentDomain.endsWith(baseDomain);
+        const matches = currentDomain.endsWith(baseDomain);
+        console.log(`Background: Checking wildcard ${domain} against ${currentDomain}:`, matches);
+        return matches;
       }
-      return currentDomain === domain || currentDomain.includes(domain);
+      const matches = currentDomain === domain || currentDomain.includes(domain);
+      console.log(`Background: Checking exact ${domain} against ${currentDomain}:`, matches);
+      return matches;
     });
-      } catch (error) {
+    
+    console.log('Background: Domain permission result:', isAllowed);
+    return isAllowed;
+  } catch (error) {
+    console.error('Background: Error checking domain permission:', error);
     return false;
   }
 }
