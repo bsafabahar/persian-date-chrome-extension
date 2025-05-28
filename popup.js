@@ -15,6 +15,8 @@ class PopupManager {
     this.elements = {};
     this.settings = {};
     this.currentPage = 1;
+    this.pendingOperations = new Set(); // برای جلوگیری از عملیات تکراری
+    this.debounceTimers = new Map(); // برای debouncing
     this.init();
   }
 
@@ -203,17 +205,16 @@ class PopupManager {
       this.elements.domainIndicator.classList.add('blocked');
     }
   }
-
   async toggleExtension(enabled) {
     try {
-      await chrome.storage.sync.set({ enabled });
+      await this.safeStorageSet({ enabled });
       this.settings.enabled = enabled;
       this.updateUI();
       
       // نمایش پیام موفقیت
       this.showSuccess(enabled ? 'افزونه فعال شد' : 'افزونه غیرفعال شد');
     } catch (error) {
-      
+      console.error('خطا در تغییر وضعیت:', error);
       this.showError('خطا در تغییر وضعیت');
       
       // برگرداندن وضعیت قبلی
@@ -271,7 +272,6 @@ class PopupManager {
     }
     return null;
   }
-
   async addCurrentDomain() {
     try {
       const domain = await this.getCurrentDomain();
@@ -290,7 +290,7 @@ class PopupManager {
 
       // اضافه کردن دامنه
       allowedDomains.push(domain);
-      await chrome.storage.sync.set({ allowedDomains });
+      await this.safeStorageSet({ allowedDomains });
       this.settings.allowedDomains = allowedDomains;
 
       this.showSuccess(`دامنه ${domain} اضافه شد`);
@@ -300,7 +300,6 @@ class PopupManager {
       this.showError('خطا در افزودن دامنه');
     }
   }
-
   async addDomain() {
     const domain = this.elements.domainInput.value.trim();
     if (!domain) {
@@ -319,7 +318,7 @@ class PopupManager {
 
       // اضافه کردن دامنه
       allowedDomains.push(domain);
-      await chrome.storage.sync.set({ allowedDomains });
+      await this.safeStorageSet({ allowedDomains });
       this.settings.allowedDomains = allowedDomains;
 
       this.elements.domainInput.value = '';
@@ -330,10 +329,9 @@ class PopupManager {
       this.showError('خطا در افزودن دامنه');
     }
   }
-
   async allowAllDomains() {
     try {
-      await chrome.storage.sync.set({ allowedDomains: ['*'] });
+      await this.safeStorageSet({ allowedDomains: ['*'] });
       this.settings.allowedDomains = ['*'];
       this.showSuccess('همه دامنه‌ها مجاز شدند');
       this.updateDomainList();
@@ -343,13 +341,20 @@ class PopupManager {
       this.showError('خطا در تنظیم دامنه‌ها');
     }
   }
-
   async removeDomain(domain) {
+    // جلوگیری از عملیات تکراری
+    const operationKey = `remove_${domain}`;
+    if (this.pendingOperations.has(operationKey)) {
+      return;
+    }
+
     try {
+      this.pendingOperations.add(operationKey);
+      
       const allowedDomains = this.settings.allowedDomains || [];
       const updatedDomains = allowedDomains.filter(d => d !== domain);
       
-      await chrome.storage.sync.set({ allowedDomains: updatedDomains });
+      await this.safeStorageSet({ allowedDomains: updatedDomains });
       this.settings.allowedDomains = updatedDomains;
       
       this.showSuccess(`دامنه ${domain} حذف شد`);
@@ -357,10 +362,18 @@ class PopupManager {
       this.updateUI();
     } catch (error) {
       console.error('خطا در حذف دامنه:', error);
-      this.showError('خطا در حذف دامنه');
+      
+      if (error.message && error.message.includes('QUOTA_BYTES_PER_ITEM')) {
+        this.showError('حجم داده زیاد است. لطفاً تعداد دامنه‌ها را کاهش دهید');
+      } else if (error.message && error.message.includes('MAX_WRITE_OPERATIONS')) {
+        this.showError('تعداد عملیات زیاد است. لطفاً کمی صبر کنید');
+      } else {
+        this.showError('خطا در حذف دامنه');
+      }
+    } finally {
+      this.pendingOperations.delete(operationKey);
     }
-  }
-  updateDomainList() {
+  }  updateDomainList() {
     const domainList = this.elements.domainList;
     const allowedDomains = this.settings.allowedDomains || [];
 
@@ -378,19 +391,20 @@ class PopupManager {
       </div>
     `).join('');
 
-    // اضافه کردن event listener برای دکمه‌های حذف
-    domainList.querySelectorAll('.domain-remove').forEach(button => {
-      button.addEventListener('click', (e) => {
+    // حذف event listener های قبلی و اضافه کردن جدید
+    domainList.removeEventListener('click', this.domainListClickHandler);
+    this.domainListClickHandler = (e) => {
+      if (e.target.classList.contains('domain-remove')) {
         const domain = e.target.getAttribute('data-domain');
-        this.removeDomain(domain);
-      });
-    });
+        this.debouncedRemoveDomain(domain);
+      }
+    };
+    domainList.addEventListener('click', this.domainListClickHandler);
   }
-
   async resetStats() {
     if (confirm('آیا از پاک کردن آمار اطمینان دارید؟')) {
       try {
-        await chrome.storage.sync.set({ convertedCount: 0 });
+        await this.safeStorageSet({ convertedCount: 0 });
         this.settings.convertedCount = 0;
         this.showSuccess('آمار پاک شد');
         this.updateUI();
@@ -414,7 +428,6 @@ class PopupManager {
       }
     }
   }
-
   handleStorageChange(changes) {
     let shouldUpdate = false;
 
@@ -428,6 +441,39 @@ class PopupManager {
     if (shouldUpdate) {
       this.updateUI();
     }
+  }
+
+  // عملیات ایمن برای ذخیره در storage با مدیریت quota
+  async safeStorageSet(data) {
+    try {
+      await chrome.storage.sync.set(data);
+    } catch (error) {
+      if (error.message && error.message.includes('MAX_WRITE_OPERATIONS')) {
+        // صبر کردن و تلاش مجدد
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await chrome.storage.sync.set(data);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  // debounced version of removeDomain
+  debouncedRemoveDomain(domain) {
+    const key = `removeDomain_${domain}`;
+    
+    // لغو timer قبلی اگر وجود داشته باشد
+    if (this.debounceTimers.has(key)) {
+      clearTimeout(this.debounceTimers.get(key));
+    }
+    
+    // تنظیم timer جدید
+    const timer = setTimeout(() => {
+      this.removeDomain(domain);
+      this.debounceTimers.delete(key);
+    }, 300); // 300ms debounce
+    
+    this.debounceTimers.set(key, timer);
   }
 
   formatNumber(num) {
@@ -446,7 +492,6 @@ class PopupManager {
   showError(message) {
     this.showNotification(message, 'error');
   }
-
   showNotification(message, type) {
     // ایجاد نوتیفیکیشن ساده
     const notification = document.createElement('div');
@@ -484,6 +529,21 @@ class PopupManager {
       }
     }, 3000);
   }
+
+  // cleanup method for when popup closes
+  cleanup() {
+    // پاک کردن تمام timers
+    for (const timer of this.debounceTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.debounceTimers.clear();
+    this.pendingOperations.clear();
+    
+    // حذف event listeners
+    if (this.domainListClickHandler && this.elements.domainList) {
+      this.elements.domainList.removeEventListener('click', this.domainListClickHandler);
+    }
+  }
 }
 
 // اضافه کردن انیمیشن‌های نوتیفیکیشن
@@ -517,4 +577,11 @@ document.head.appendChild(style);
 let popupManager;
 document.addEventListener('DOMContentLoaded', () => {
   popupManager = new PopupManager();
+});
+
+// پاک کردن منابع هنگام بسته شدن popup
+window.addEventListener('beforeunload', () => {
+  if (popupManager) {
+    popupManager.cleanup();
+  }
 });
