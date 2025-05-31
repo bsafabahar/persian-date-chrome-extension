@@ -6,8 +6,25 @@
  * @version 1.0.0
  */
 
-// Mark that our extension is active
-window.persianDateExtension = true;
+// بررسی اولیه دامنه - اگر پشتیبانی نشده، کاری انجام نده
+async function checkDomainPermission() {
+    try {
+        const response = await chrome.runtime.sendMessage({ action: 'checkDomain' });
+        return response?.isAllowed || false;
+    } catch (error) {
+        return false;
+    }
+}
+
+// شروع اکستنشن فقط در صورت مجاز بودن دامنه
+checkDomainPermission().then(isAllowed => {
+    if (isAllowed) {
+        // Mark that our extension is active
+        window.persianDateExtension = true;
+        new PersianDateConverter();
+    }
+    // اگر دامنه مجاز نیست، هیچ کاری انجام نمی‌دهیم
+});
 
 class PersianDateConverter {
     constructor() {
