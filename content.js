@@ -16,20 +16,47 @@ async function checkDomainPermission() {
     }
 }
 
+// متغیر برای نگهداری instance converter
+let converterInstance = null;
+
 // شروع اکستنشن فقط در صورت مجاز بودن دامنه
 checkDomainPermission().then(isAllowed => {
     if (isAllowed) {
         // Mark that our extension is active
         window.persianDateExtension = true;
-        new PersianDateConverter();
+        converterInstance = new PersianDateConverter();
     }
     // اگر دامنه مجاز نیست، هیچ کاری انجام نمی‌دهیم
+});
+
+// گوش دادن به تغییرات storage برای enable/disable
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'sync' && changes.enabled) {
+        const isEnabled = changes.enabled.newValue;
+        
+        if (!isEnabled && converterInstance) {
+            // متوقف کردن converter
+            converterInstance.destroy();
+            converterInstance = null;
+            window.persianDateExtension = false;
+        } else if (isEnabled && !converterInstance) {
+            // شروع دوباره converter فقط اگر دامنه مجاز باشد
+            checkDomainPermission().then(isAllowed => {
+                if (isAllowed) {
+                    window.persianDateExtension = true;
+                    converterInstance = new PersianDateConverter();
+                }
+            });
+        }
+    }
 });
 
 class PersianDateConverter {
     constructor() {
         this.convertedCount = 0;
         this.processedNodes = new WeakSet();
+        this.observer = null;
+        this.isDestroyed = false;
         this.init();
     }
 
@@ -66,7 +93,7 @@ class PersianDateConverter {
     }
 
     startConversion() {
-        if (!document.body) {
+        if (this.isDestroyed || !document.body) {
             return;
         }
 
@@ -75,12 +102,14 @@ class PersianDateConverter {
     }
 
     convertDatesInDocument() {
+        if (this.isDestroyed || !document.body) return;
+        
         const walker = document.createTreeWalker(
             document.body,
             NodeFilter.SHOW_TEXT,
             {
                 acceptNode: (node) => {
-                    if (this.processedNodes.has(node)) {
+                    if (this.isDestroyed || this.processedNodes.has(node)) {
                         return NodeFilter.FILTER_REJECT;
                     }
                     
@@ -97,12 +126,14 @@ class PersianDateConverter {
         const textNodes = [];
         let node;
         while (node = walker.nextNode()) {
+            if (this.isDestroyed) break;
             if (this.containsDate(node.textContent)) {
                 textNodes.push(node);
             }
         }
 
         textNodes.forEach((textNode) => {
+            if (this.isDestroyed) return;
             this.processTextNode(textNode);
         });
     }
@@ -119,11 +150,13 @@ class PersianDateConverter {
     }
 
     processTextNode(textNode) {
+        if (this.isDestroyed) return;
+        
         try {
             const originalText = textNode.textContent;
             const convertedText = this.convertDatesInText(originalText);
 
-            if (originalText !== convertedText) {
+            if (originalText !== convertedText && !this.isDestroyed) {
                 textNode.textContent = convertedText;
                 this.processedNodes.add(textNode);
             }
@@ -171,7 +204,11 @@ class PersianDateConverter {
     }
 
     setupMutationObserver() {
-        const observer = new MutationObserver((mutations) => {
+        if (this.isDestroyed) return;
+        
+        this.observer = new MutationObserver((mutations) => {
+            if (this.isDestroyed) return;
+            
             let hasNewText = false;
             
             mutations.forEach((mutation) => {
@@ -196,17 +233,30 @@ class PersianDateConverter {
                 }
             });
             
-            if (hasNewText) {
-                setTimeout(() => this.convertDatesInDocument(), 100);
+            if (hasNewText && !this.isDestroyed) {
+                setTimeout(() => {
+                    if (!this.isDestroyed) {
+                        this.convertDatesInDocument();
+                    }
+                }, 100);
             }
         });
 
-        observer.observe(document.body, {
+        this.observer.observe(document.body, {
             childList: true,
             subtree: true
         });
     }
-}
 
-// Initialize the converter
-const converter = new PersianDateConverter();
+    destroy() {
+        this.isDestroyed = true;
+        
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+        
+        // پاک کردن WeakSet (اختیاری، چون garbage collected می‌شود)
+        this.processedNodes = null;
+    }
+}
