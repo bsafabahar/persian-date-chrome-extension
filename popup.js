@@ -1,22 +1,10 @@
-/**
- * Persian Date Chrome Extension - Popup Script
- * تبدیل تاریخ میلادی به شمسی
- * 
- * @author Babak Safabahar
- * @version 1.1.0
- */
-
-/**
- * Popup Script - اسکریپت رابط کاربری popup
- */
-
 class PopupManager {
   constructor() {
     this.elements = {};
     this.settings = {};
     this.currentPage = 1;
-    this.pendingOperations = new Set(); // برای جلوگیری از عملیات تکراری
-    this.debounceTimers = new Map(); // برای debouncing
+    this.pendingOperations = new Set();
+    this.debounceTimers = new Map();
     this.init();
   }
 
@@ -50,59 +38,47 @@ class PopupManager {
     };
   }
   setupEventListeners() {
-    // تغییر وضعیت افزونه
     this.elements.enableToggle.addEventListener('change', (e) => {
       this.toggleExtension(e.target.checked);
     });
 
-    // دکمه تازه‌سازی
     this.elements.refreshBtn.addEventListener('click', () => {
       this.refreshCurrentTab();
     });
 
-    // دکمه تنظیمات
     this.elements.settingsBtn.addEventListener('click', () => {
       this.showPage(2);
     });
 
-    // دکمه بازگشت
     this.elements.backBtn.addEventListener('click', () => {
       this.showPage(1);
     });
 
-    // دکمه افزودن دامنه فعلی
     this.elements.addCurrentDomainBtn.addEventListener('click', () => {
       this.addCurrentDomain();
     });
 
-    // دکمه افزودن دامنه جدید
     this.elements.addDomainBtn.addEventListener('click', () => {
       this.addDomain();
     });
 
-    // دکمه اجازه به همه دامنه‌ها
     this.elements.allowAllBtn.addEventListener('click', () => {
       this.allowAllDomains();
     });
 
-    // دکمه پاک کردن آمار
     this.elements.resetStatsBtn.addEventListener('click', () => {
       this.resetStats();
     });
 
-    // دکمه بازنشانی همه تنظیمات
     this.elements.resetAllBtn.addEventListener('click', () => {
       this.resetAll();
     });
 
-    // Enter key در input دامنه
     this.elements.domainInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         this.addDomain();
       }
     });
-
-    // گوش دادن به تغییرات storage
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync') {
         this.handleStorageChange(changes);
@@ -125,20 +101,16 @@ class PopupManager {
     }
   }
   updateUI() {
-    // وضعیت افزونه
     const isEnabled = this.settings.enabled || false;
     this.elements.enableToggle.checked = isEnabled;
     
     this.elements.statusText.textContent = isEnabled ? 'فعال' : 'غیرفعال';
     this.elements.statusText.className = `status-text ${isEnabled ? 'enabled' : ''}`;
 
-    // شمارنده تبدیل‌ها
     this.elements.convertedCount.textContent = this.formatNumber(this.settings.convertedCount || 0);
 
-    // وضعیت دامنه فعلی
     this.checkCurrentDomainStatus();
 
-    // بروزرسانی لیست دامنه‌ها در صفحه تنظیمات
     this.updateDomainList();
   }
 
@@ -183,7 +155,6 @@ class PopupManager {
         this.updateDomainStatus('افزونه برای این دامنه فعال است', '🟢');
       } else {
         this.updateDomainStatus('افزونه برای این دامنه فعال نیست', '🔴');
-        // نمایش دکمه افزودن دامنه اگر دامنه مجاز نباشد
         this.elements.addCurrentDomainBtn.style.display = 'inline-flex';
       }
     } catch (error) {
@@ -195,9 +166,7 @@ class PopupManager {
     this.elements.domainText.textContent = text;
     this.elements.domainIndicator.textContent = indicator;
     
-    // مخفی کردن دکمه افزودن دامنه به طور پیش‌فرض
     this.elements.addCurrentDomainBtn.style.display = 'none';
-      // اضافه کردن کلاس مناسب
     this.elements.domainIndicator.className = 'domain-indicator';
     if (text.includes('فعال است')) {
       this.elements.domainIndicator.classList.add('allowed');
@@ -211,13 +180,10 @@ class PopupManager {
       this.settings.enabled = enabled;
       this.updateUI();
       
-      // نمایش پیام موفقیت
       this.showSuccess(enabled ? 'افزونه فعال شد' : 'افزونه غیرفعال شد');
     } catch (error) {
-      console.error('خطا در تغییر وضعیت:', error);
       this.showError('خطا در تغییر وضعیت');
       
-      // برگرداندن وضعیت قبلی
       this.elements.enableToggle.checked = !enabled;
     }
   }
@@ -229,7 +195,6 @@ class PopupManager {
         await chrome.tabs.reload(tab.id);
         this.showSuccess('صفحه تازه‌سازی شد');
         
-        // بستن popup بعد از 1 ثانیه
         setTimeout(() => {
           window.close();
         }, 1000);
@@ -245,18 +210,16 @@ class PopupManager {
   }
 
   showPage(pageNumber) {
-    // مخفی کردن همه صفحات
     this.elements.page1.classList.remove('active');
     this.elements.page2.classList.remove('active');
 
-    // نمایش صفحه مورد نظر
     if (pageNumber === 1) {
       this.elements.page1.classList.add('active');
       this.currentPage = 1;
     } else if (pageNumber === 2) {
       this.elements.page2.classList.add('active');
       this.currentPage = 2;
-      this.updateDomainList(); // بروزرسانی لیست دامنه‌ها
+      this.updateDomainList();
     }
   }
 
@@ -268,7 +231,6 @@ class PopupManager {
         return url.hostname;
       }
     } catch (error) {
-      console.error('خطا در دریافت دامنه فعلی:', error);
     }
     return null;
   }
@@ -296,7 +258,6 @@ class PopupManager {
       this.showSuccess(`دامنه ${domain} اضافه شد`);
       this.updateUI();
     } catch (error) {
-      console.error('خطا در افزودن دامنه فعلی:', error);
       this.showError('خطا در افزودن دامنه');
     }
   }
@@ -310,13 +271,11 @@ class PopupManager {
     try {
       const allowedDomains = this.settings.allowedDomains || [];
       
-      // بررسی اینکه دامنه قبلاً اضافه نشده باشد
       if (allowedDomains.includes(domain)) {
         this.showError('این دامنه قبلاً اضافه شده است');
         return;
       }
 
-      // اضافه کردن دامنه
       allowedDomains.push(domain);
       await this.safeStorageSet({ allowedDomains });
       this.settings.allowedDomains = allowedDomains;
@@ -325,7 +284,6 @@ class PopupManager {
       this.showSuccess(`دامنه ${domain} اضافه شد`);
       this.updateDomainList();
     } catch (error) {
-      console.error('خطا در افزودن دامنه:', error);
       this.showError('خطا در افزودن دامنه');
     }
   }
@@ -337,12 +295,10 @@ class PopupManager {
       this.updateDomainList();
       this.updateUI();
     } catch (error) {
-      console.error('خطا در مجاز کردن همه دامنه‌ها:', error);
       this.showError('خطا در تنظیم دامنه‌ها');
     }
   }
   async removeDomain(domain) {
-    // جلوگیری از عملیات تکراری
     const operationKey = `remove_${domain}`;
     if (this.pendingOperations.has(operationKey)) {
       return;
@@ -361,7 +317,6 @@ class PopupManager {
       this.updateDomainList();
       this.updateUI();
     } catch (error) {
-      console.error('خطا در حذف دامنه:', error);
       
       if (error.message && error.message.includes('QUOTA_BYTES_PER_ITEM')) {
         this.showError('حجم داده زیاد است. لطفاً تعداد دامنه‌ها را کاهش دهید');
@@ -391,7 +346,6 @@ class PopupManager {
       </div>
     `).join('');
 
-    // حذف event listener های قبلی و اضافه کردن جدید
     domainList.removeEventListener('click', this.domainListClickHandler);
     this.domainListClickHandler = (e) => {
       if (e.target.classList.contains('domain-remove')) {
@@ -409,7 +363,6 @@ class PopupManager {
         this.showSuccess('آمار پاک شد');
         this.updateUI();
       } catch (error) {
-        console.error('خطا در پاک کردن آمار:', error);
         this.showError('خطا در پاک کردن آمار');
       }
     }
@@ -422,8 +375,7 @@ class PopupManager {
         this.settings = {};
         this.showSuccess('همه تنظیمات بازنشانی شد');
         this.loadSettings();
-      } catch (error) {
-        console.error('خطا در بازنشانی تنظیمات:', error);
+                } catch (error) {
         this.showError('خطا در بازنشانی تنظیمات');
       }
     }
@@ -443,13 +395,11 @@ class PopupManager {
     }
   }
 
-  // عملیات ایمن برای ذخیره در storage با مدیریت quota
   async safeStorageSet(data) {
     try {
       await chrome.storage.sync.set(data);
     } catch (error) {
       if (error.message && error.message.includes('MAX_WRITE_OPERATIONS')) {
-        // صبر کردن و تلاش مجدد
         await new Promise(resolve => setTimeout(resolve, 1000));
         await chrome.storage.sync.set(data);
       } else {
@@ -458,20 +408,17 @@ class PopupManager {
     }
   }
 
-  // debounced version of removeDomain
   debouncedRemoveDomain(domain) {
     const key = `removeDomain_${domain}`;
     
-    // لغو timer قبلی اگر وجود داشته باشد
     if (this.debounceTimers.has(key)) {
       clearTimeout(this.debounceTimers.get(key));
     }
     
-    // تنظیم timer جدید
     const timer = setTimeout(() => {
       this.removeDomain(domain);
       this.debounceTimers.delete(key);
-    }, 300); // 300ms debounce
+    }, 300);
     
     this.debounceTimers.set(key, timer);
   }
@@ -493,12 +440,10 @@ class PopupManager {
     this.showNotification(message, 'error');
   }
   showNotification(message, type) {
-    // ایجاد نوتیفیکیشن ساده
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
     
-    // استایل نوتیفیکیشن
     notification.style.cssText = `
       position: fixed;
       top: 10px;
@@ -517,7 +462,6 @@ class PopupManager {
 
     document.body.appendChild(notification);
 
-    // حذف نوتیفیکیشن بعد از 3 ثانیه
     setTimeout(() => {
       if (notification.parentNode) {
         notification.style.animation = 'slideUp 0.3s ease-out';
@@ -530,23 +474,19 @@ class PopupManager {
     }, 3000);
   }
 
-  // cleanup method for when popup closes
   cleanup() {
-    // پاک کردن تمام timers
     for (const timer of this.debounceTimers.values()) {
       clearTimeout(timer);
     }
     this.debounceTimers.clear();
     this.pendingOperations.clear();
     
-    // حذف event listeners
     if (this.domainListClickHandler && this.elements.domainList) {
       this.elements.domainList.removeEventListener('click', this.domainListClickHandler);
     }
   }
 }
 
-// اضافه کردن انیمیشن‌های نوتیفیکیشن
 const style = document.createElement('style');
 style.textContent = `
   @keyframes slideDown {
@@ -573,13 +513,11 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// شروع popup
 let popupManager;
 document.addEventListener('DOMContentLoaded', () => {
   popupManager = new PopupManager();
 });
 
-// پاک کردن منابع هنگام بسته شدن popup
 window.addEventListener('beforeunload', () => {
   if (popupManager) {
     popupManager.cleanup();

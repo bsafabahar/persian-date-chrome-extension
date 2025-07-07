@@ -1,15 +1,3 @@
-/**
- * Persian Date Chrome Extension - Options Script
- * تبدیل تاریخ میلادی به شمسی
- * 
- * @author Babak Safabahar
- * @version 1.0.0
- */
-
-/**
- * Options Script - اسکریپت صفحه تنظیمات
- */
-
 class OptionsManager {
   constructor() {
     this.elements = {};
@@ -40,7 +28,6 @@ class OptionsManager {
   }
 
   setupEventListeners() {
-    // دکمه‌های فعال/غیرفعال
     this.elements.enableBtn.addEventListener('click', () => {
       this.setExtensionStatus(true);
     });
@@ -49,7 +36,6 @@ class OptionsManager {
       this.setExtensionStatus(false);
     });
 
-    // مدیریت دامنه‌ها
     this.elements.addDomainBtn.addEventListener('click', () => {
       this.addDomain();
     });
@@ -64,7 +50,6 @@ class OptionsManager {
       }
     });
 
-    // عملیات
     this.elements.resetStatsBtn.addEventListener('click', () => {
       this.resetStats();
     });
@@ -72,8 +57,6 @@ class OptionsManager {
     this.elements.resetAllBtn.addEventListener('click', () => {
       this.resetAll();
     });
-
-    // گوش دادن به تغییرات storage
     chrome.storage.onChanged.addListener((changes, areaName) => {
       if (areaName === 'sync') {
         this.handleStorageChange(changes);
@@ -89,7 +72,6 @@ class OptionsManager {
         'convertedCount'
       ]);
 
-      // مقادیر پیش‌فرض
       if (this.settings.enabled === undefined) {
         this.settings.enabled = true;
       }
@@ -108,7 +90,6 @@ class OptionsManager {
   }
 
   updateUI() {
-    // وضعیت دکمه‌ها
     if (this.settings.enabled) {
       this.elements.enableBtn.classList.add('btn-primary');
       this.elements.enableBtn.classList.remove('btn-secondary');
@@ -121,10 +102,8 @@ class OptionsManager {
       this.elements.disableBtn.classList.remove('btn-secondary');
     }
 
-    // لیست دامنه‌ها
     this.updateDomainList();
 
-    // آمار
     this.elements.totalConverted.textContent = this.formatNumber(this.settings.convertedCount);
     this.elements.totalDomains.textContent = this.settings.allowedDomains.length;
   }
@@ -184,26 +163,22 @@ class OptionsManager {
       return;
     }
 
-    // اعتبارسنجی دامنه
     if (!this.isValidDomain(domain)) {
       this.showNotification('فرمت دامنه معتبر نیست', 'error');
       return;
     }
 
-    // بررسی تکراری بودن
     if (this.settings.allowedDomains.includes(domain)) {
       this.showNotification('این دامنه قبلاً اضافه شده است', 'error');
       return;
     }
 
     try {
-      // حذف * اگر دامنه خاص اضافه می‌شود
       let newDomains = [...this.settings.allowedDomains];
       if (domain !== '*' && newDomains.includes('*')) {
         newDomains = newDomains.filter(d => d !== '*');
       }
 
-      // اضافه کردن دامنه جدید
       newDomains.push(domain);
 
       await chrome.storage.sync.set({ allowedDomains: newDomains });
@@ -227,7 +202,6 @@ class OptionsManager {
       const newDomains = [...this.settings.allowedDomains];
       newDomains.splice(index, 1);
 
-      // اگر هیچ دامنه‌ای نماند، * اضافه کن
       if (newDomains.length === 0) {
         newDomains.push('*');
       }
@@ -301,7 +275,6 @@ class OptionsManager {
       return true;
     }
 
-    // بررسی IP آدرس
     const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (ipPattern.test(domain)) {
       return domain.split('.').every(part => {
@@ -310,7 +283,6 @@ class OptionsManager {
       });
     }
 
-    // بررسی دامنه معمولی
     const domainPattern = /^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return domainPattern.test(domain);
   }
@@ -345,14 +317,12 @@ class OptionsManager {
     notification.className = `notification notification-${type}`;
     notification.style.display = 'block';
 
-    // حذف نوتیفیکیشن بعد از 5 ثانیه
     setTimeout(() => {
       notification.style.display = 'none';
     }, 5000);
   }
 }
 
-// شروع options
 document.addEventListener('DOMContentLoaded', () => {
   new OptionsManager();
 });

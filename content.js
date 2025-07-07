@@ -1,12 +1,4 @@
-/**
- * Persian Date Chrome Extension - Content Script
- * تبدیل تاریخ میلادی به شمسی
- * 
- * @author Babak Safabahar
- * @version 1.1.0
- */
 
-// بررسی اولیه دامنه - اگر پشتیبانی نشده، کاری انجام نده
 async function checkDomainPermission() {
     try {
         const response = await chrome.runtime.sendMessage({ action: 'checkDomain' });
@@ -16,31 +8,23 @@ async function checkDomainPermission() {
     }
 }
 
-// متغیر برای نگهداری instance converter
 let converterInstance = null;
-
-// شروع اکستنشن فقط در صورت مجاز بودن دامنه
 checkDomainPermission().then(isAllowed => {
     if (isAllowed) {
-        // Mark that our extension is active
         window.persianDateExtension = true;
         converterInstance = new PersianDateConverter();
     }
-    // اگر دامنه مجاز نیست، هیچ کاری انجام نمی‌دهیم
 });
 
-// گوش دادن به تغییرات storage برای enable/disable
 chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'sync' && changes.enabled) {
         const isEnabled = changes.enabled.newValue;
         
         if (!isEnabled && converterInstance) {
-            // متوقف کردن converter
             converterInstance.destroy();
             converterInstance = null;
             window.persianDateExtension = false;
         } else if (isEnabled && !converterInstance) {
-            // شروع دوباره converter فقط اگر دامنه مجاز باشد
             checkDomainPermission().then(isAllowed => {
                 if (isAllowed) {
                     window.persianDateExtension = true;
@@ -57,11 +41,26 @@ class PersianDateConverter {
         this.processedNodes = new WeakSet();
         this.observer = null;
         this.isDestroyed = false;
+        
+        this.monthNames = {
+            'jan': 1, 'january': 1,
+            'feb': 2, 'february': 2,
+            'mar': 3, 'march': 3,
+            'apr': 4, 'april': 4,
+            'may': 5,
+            'jun': 6, 'june': 6,
+            'jul': 7, 'july': 7,
+            'aug': 8, 'august': 8,
+            'sep': 9, 'september': 9,
+            'oct': 10, 'october': 10,
+            'nov': 11, 'november': 11,
+            'dec': 12, 'december': 12
+        };
+        
         this.init();
     }
 
     init() {
-        // Wait for DOM and libraries to be ready
         this.waitForReady(() => {
             if (this.checkLibrary()) {
                 this.startConversion();
@@ -139,14 +138,29 @@ class PersianDateConverter {
     }
 
     containsDate(text) {
-        if (!text || text.trim().length < 8) return false;
+        if (!text || text.trim().length < 6) return false;
         
         const patterns = [
+            // فرمت‌های عددی
             /\b\d{4}[-\/]\d{1,2}[-\/]\d{1,2}\b/,
-            /\b\d{1,2}[-\/]\d{1,2}[-\/]\d{4}\b/
+            /\b\d{1,2}[-\/]\d{1,2}[-\/]\d{4}\b/,
+            // فرمت‌های با نام ماه انگلیسی
+            /\b\d{1,2}[-\/](jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)[-\/]\d{2,4}\b/i,
+            /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)[-\/]\d{1,2}[-\/]\d{2,4}\b/i
         ];
 
         return patterns.some(pattern => pattern.test(text));
+    }
+
+    expandYear(yearStr) {
+        const year = parseInt(yearStr);
+        if (yearStr.length === 2) {
+            return year <= 30 ? 2000 + year : 1900 + year;
+        }
+        return year;
+    }
+    getMonthNumber(monthName) {
+        return this.monthNames[monthName.toLowerCase()] || null;
     }
 
     processTextNode(textNode) {
@@ -161,21 +175,47 @@ class PersianDateConverter {
                 this.processedNodes.add(textNode);
             }
         } catch (error) {
-            // Silently handle errors
         }
     }
 
     convertDatesInText(text) {
         let convertedText = text;
         
+        // فرمت YYYY-MM-DD یا YYYY/MM/DD
         convertedText = convertedText.replace(/\b(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})\b/g, (match, year, month, day) => {
-            return this.convertToPersian(parseInt(year), parseInt(month), parseInt(day), match);
+            const yearNum = parseInt(year);
+            if (yearNum >= 1900 && yearNum <= 2100) {
+                return this.convertToPersian(yearNum, parseInt(month), parseInt(day), match);
+            }
+            return match;
         });
 
         convertedText = convertedText.replace(/\b(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})\b/g, (match, day, month, year) => {
             const yearNum = parseInt(year);
             if (yearNum >= 1900 && yearNum <= 2100) {
                 return this.convertToPersian(yearNum, parseInt(month), parseInt(day), match);
+            }
+            return match;
+        });
+
+        convertedText = convertedText.replace(/\b(\d{1,2})[-\/]([a-zA-Z]{3,9})[-\/](\d{2,4})\b/g, (match, day, monthName, year) => {
+            const monthNum = this.getMonthNumber(monthName);
+            if (monthNum) {
+                const yearNum = this.expandYear(year);
+                if (yearNum >= 1900 && yearNum <= 2100) {
+                    return this.convertToPersian(yearNum, monthNum, parseInt(day), match);
+                }
+            }
+            return match;
+        });
+
+        convertedText = convertedText.replace(/\b([a-zA-Z]{3,9})[-\/](\d{1,2})[-\/](\d{2,4})\b/g, (match, monthName, day, year) => {
+            const monthNum = this.getMonthNumber(monthName);
+            if (monthNum) {
+                const yearNum = this.expandYear(year);
+                if (yearNum >= 1900 && yearNum <= 2100) {
+                    return this.convertToPersian(yearNum, monthNum, parseInt(day), match);
+                }
             }
             return match;
         });
@@ -256,7 +296,6 @@ class PersianDateConverter {
             this.observer = null;
         }
         
-        // پاک کردن WeakSet (اختیاری، چون garbage collected می‌شود)
         this.processedNodes = null;
     }
 }

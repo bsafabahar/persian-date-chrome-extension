@@ -1,37 +1,21 @@
-/**
- * Persian Date Chrome Extension - Background Script
- * تبدیل تاریخ میلادی به شمسی
- * 
- * @author Babak Safabahar
- * @version 1.1.0
- */
 
-/**
- * Background Script - Service Worker برای افزونه تبدیل تاریخ
- */
-
-// تنظیمات پیش‌فرض
 const DEFAULT_SETTINGS = {
   enabled: true,
-  allowedDomains: ['*'], // * به معنای همه دامنه‌ها
+  allowedDomains: ['*'],
   convertedCount: 0
 };
 
-// نصب افزونه
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
-    // تنظیم مقادیر پیش‌فرض
     await chrome.storage.sync.set(DEFAULT_SETTINGS);
   }
 });
-
-// دریافت پیام از content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'checkDomain') {
     checkDomainPermission(sender.tab.url).then(isAllowed => {
       sendResponse({ isAllowed });
     });
-    return true; // برای async response
+    return true;
   }
   
   if (request.action === 'incrementCounter') {
@@ -45,8 +29,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
-
-// بررسی مجوز دامنه
 async function checkDomainPermission(url) {
   try {
     const settings = await chrome.storage.sync.get(['enabled', 'allowedDomains']);
@@ -78,18 +60,14 @@ async function checkDomainPermission(url) {
   }
 }
 
-// افزایش شمارنده تبدیل‌ها
 async function incrementConvertedCount() {
   try {
     const result = await chrome.storage.sync.get(['convertedCount']);
     const newCount = (result.convertedCount || 0) + 1;
     await chrome.storage.sync.set({ convertedCount: newCount });
   } catch (error) {
-    // خطا در به‌روزرسانی شمارنده
   }
 }
-
-// دریافت تنظیمات
 async function getSettings() {
   try {
     return await chrome.storage.sync.get(DEFAULT_SETTINGS);
@@ -98,7 +76,6 @@ async function getSettings() {
   }
 }
 
-// به‌روزرسانی آیکون براساس وضعیت
 async function updateIcon() {
   try {
     const settings = await chrome.storage.sync.get(['enabled']);
@@ -112,16 +89,12 @@ async function updateIcon() {
       }
     });
   } catch (error) {
-    // خطا در به‌روزرسانی آیکون
   }
 }
-
-// نظارت بر تغییرات تنظیمات
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'sync' && changes.enabled) {
     updateIcon();
   }
 });
 
-// بررسی و به‌روزرسانی آیکون در شروع
 updateIcon();
