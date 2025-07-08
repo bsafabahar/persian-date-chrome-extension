@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Persian Date Converter - Privacy Policy</title>
+</head>
+<body>
+    <h1>Privacy Policy for Persian Date Converter Extension</h1>
+    
+    <h2>Data Collection</h2>
+    <p>This extension does not collect, store, or transmit any personal information or user data.</p>
+    
+    <h2>Local Storage</h2>
+    <p>The extension stores the following data locally on your device:</p>
+    <ul>
+        <li>Extension enabled/disabled status</li>
+        <li>List of allowed domains</li>
+        <li>Conversion statistics counter</li>
+    </ul>
+    
+    <h2>Data Usage</h2>
+    <p>All stored data is used solely for extension functionality and remains on your device. No data is transmitted to external servers.</p>
+    
+    <h2>Third Parties</h2>
+    <p>This extension does not share any data with third parties.</p>
+      <h2>Contact</h2>
+    <p>For questions about this privacy policy, contact: bsafabahar@gmail.com</p>
+</body>
+</html>
